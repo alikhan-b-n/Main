@@ -3,3 +3,21 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code
+.vscode/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
