@@ -1,0 +1,708 @@
+================================================================================
+LAMA CRM - ARCHITECTURE DOCUMENTATION
+================================================================================
+
+OVERVIEW
+--------
+This CRM system implements Domain-Driven Design (DDD) and Command Query
+Responsibility Segregation (CQRS) patterns using a clean, layered architecture
+with Entity Framework Core and PostgreSQL.
+
+================================================================================
+ARCHITECTURE LAYERS
+================================================================================
+
+Layer Structure:
+┌─────────────────────────────────────────┐
+│         Lama.Api (Presentation)         │
+│  Controllers, DTOs, API Configuration   │
+└─────────────────┬───────────────────────┘
+                  │
+┌─────────────────▼───────────────────────┐
+│      Lama.Application (Use Cases)       │
+│   Commands, Queries, Handlers, DTOs     │
+└─────────────────┬───────────────────────┘
+                  │
+┌─────────────────▼───────────────────────┐
+│    Lama.Domain (Business Logic Core)    │
+│  Entities, Value Objects, Domain Events │
+└─────────────────┬───────────────────────┘
+                  │
+┌─────────────────▼───────────────────────┐
+│  Lama.Infrastructure (Data & External)  │
+│  EF Core, Repositories, Configurations  │
+└─────────────────────────────────────────┘
+
+DEPENDENCY FLOW
+---------------
+✓ Dependencies flow inward (Dependency Inversion Principle)
+✓ Domain layer has ZERO dependencies on other layers
+✓ Infrastructure depends on Domain & Application (implements interfaces)
+✓ Application depends only on Domain
+✓ API depends on Application & Infrastructure (composition root)
+
+================================================================================
+DDD IMPLEMENTATION
+================================================================================
+
+1. DOMAIN LAYER STRUCTURE
+--------------------------
+The domain is organized into bounded contexts:
+
+Lama.Domain/
+├── Common/                    # Shared kernel
+│   ├── Entity.cs             # Base entity with Id, timestamps
+│   ├── AggregateRoot.cs      # Root with domain events
+│   ├── ValueObject.cs        # Base for value objects
+│   └── IDomainEvent.cs       # Domain event marker
+│
+├── CustomerManagement/        # Bounded Context #1
+│   ├── Entities/
+│   │   ├── Account.cs        # Aggregate Root
+│   │   ├── Contact.cs        # Aggregate Root
+│   │   ├── Organization.cs   # Aggregate Root
+│   │   └── OrganizationalRelationship.cs
+│   └── ValueObjects/
+│       ├── Email.cs
+│       ├── PhoneNumber.cs
+│       └── Address.cs
+│
+├── SalesManagement/           # Bounded Context #2
+│   ├── Entities/
+│   │   ├── Opportunity.cs    # Aggregate Root
+│   │   ├── SalesPipeline.cs  # Aggregate Root
+│   │   ├── SalesActivity.cs  # Entity (owned by Opportunity)
+│   │   └── SalesForecast.cs  # Aggregate Root
+│   └── ValueObjects/
+│       └── Money.cs
+│
+├── MarketingManagement/       # Bounded Context #3
+│   └── Entities/
+│       ├── Campaign.cs
+│       ├── CustomerSegment.cs
+│       ├── CampaignMetric.cs
+│       └── MarketingAnalytics.cs
+│
+└── CustomerService/           # Bounded Context #4
+    └── Entities/
+        ├── SupportCase.cs
+        ├── CaseInteraction.cs
+        └── ServiceWorkflow.cs
+
+2. KEY DDD PATTERNS
+-------------------
+
+AGGREGATE ROOTS
+Example from Account.cs:
+
+public class Account : AggregateRoot
+{
+    // Encapsulated state
+    public string Name { get; private set; }
+    private readonly List<Contact> _contacts = new();
+    public IReadOnlyCollection<Contact> Contacts => _contacts.AsReadOnly();
+
+    // Factory method enforces invariants
+    public static Account Create(string name, AccountType type)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Account name cannot be empty");
+        return new Account(name, type);
+    }
+
+    // Business logic encapsulated in methods
+    public void AddContact(Contact contact)
+    {
+        if (_contacts.Any(c => c.Id == contact.Id))
+            throw new InvalidOperationException("Contact already exists");
+        _contacts.Add(contact);
+        UpdatedAt = DateTime.UtcNow;
+    }
+}
+
+Design Decisions:
+✓ Private setters protect invariants
+✓ Factory methods (static Create) ensure valid construction
+✓ Business logic lives in domain methods, not in services
+✓ Collections exposed as IReadOnly to prevent external mutation
+
+
+VALUE OBJECTS
+Example from Email.cs:
+
+public class Email : ValueObject
+{
+    public string Value { get; private set; }
+
+    public static Email Create(string email)
+    {
+        if (!IsValidEmail(email))
+            throw new ArgumentException("Invalid email format");
+        return new Email(email);
+    }
+
+    protected override IEnumerable<object?> GetEqualityComponents()
+    {
+        yield return Value.ToLowerInvariant();
+    }
+}
+
+Design Decisions:
+✓ Immutable (private setter, no mutation methods)
+✓ Self-validating (validation in factory)
+✓ Equality by value (GetEqualityComponents)
+✓ Used across multiple aggregates (Email, Address, Money)
+
+
+DOMAIN EVENTS
+Example from AggregateRoot.cs:
+
+public abstract class AggregateRoot : Entity
+{
+    private readonly List<IDomainEvent> _domainEvents = new();
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+
+    protected void AddDomainEvent(IDomainEvent domainEvent)
+    {
+        _domainEvents.Add(domainEvent);
+    }
+}
+
+Design Decisions:
+✓ Events stored on aggregates, dispatched by infrastructure
+✓ Enables loose coupling between bounded contexts
+✓ Supports eventual consistency patterns
+
+================================================================================
+CQRS IMPLEMENTATION
+================================================================================
+
+APPLICATION LAYER STRUCTURE
+---------------------------
+
+Lama.Application/
+├── Common/
+│   └── IRepository<T>.cs      # Abstraction (no EF dependency)
+│
+├── Accounts/
+│   ├── Commands/              # Write operations
+│   │   ├── CreateAccount/
+│   │   │   ├── CreateAccountCommand.cs
+│   │   │   └── CreateAccountCommandHandler.cs
+│   │   └── UpdateAccount/
+│   │       ├── UpdateAccountCommand.cs
+│   │       └── UpdateAccountCommandHandler.cs
+│   │
+│   └── Queries/               # Read operations
+│       ├── GetAccount/
+│       │   ├── GetAccountQuery.cs
+│       │   └── GetAccountQueryHandler.cs
+│       └── GetAllAccounts/
+│           ├── GetAllAccountsQuery.cs
+│           └── GetAllAccountsQueryHandler.cs
+│
+└── DependencyInjection.cs     # Service registration
+
+
+COMMANDS (WRITE SIDE)
+---------------------
+Example from CreateAccountCommandHandler.cs:
+
+public class CreateAccountCommandHandler
+{
+    private readonly IRepository<Account> _repository;
+
+    public async Task<Guid> Handle(CreateAccountCommand command, CancellationToken ct)
+    {
+        // 1. Use domain factory to create aggregate
+        var account = Account.Create(command.Name, command.Type);
+
+        // 2. Execute domain logic
+        if (command.Email != null)
+            account.SetContactInfo(command.Email, command.PhoneNumber);
+
+        // 3. Persist via repository
+        await _repository.AddAsync(account, ct);
+
+        // 4. Return identifier
+        return account.Id;
+    }
+}
+
+Design Decisions:
+✓ Commands are imperative (CreateAccount, UpdateAccount)
+✓ Handlers orchestrate domain logic, don't contain it
+✓ Return primitive types (Guid, bool), not domain objects
+✓ One command = one aggregate modification (transaction boundary)
+
+
+QUERIES (READ SIDE)
+-------------------
+Example from GetAccountQueryHandler.cs:
+
+public class GetAccountQueryHandler
+{
+    private readonly IRepository<Account> _repository;
+
+    public async Task<AccountDto?> Handle(GetAccountQuery query, CancellationToken ct)
+    {
+        var account = await _repository.GetByIdAsync(query.Id, ct);
+        if (account == null) return null;
+
+        // Map to DTO (no domain logic)
+        return new AccountDto
+        {
+            Id = account.Id,
+            Name = account.Name,
+            Email = account.Email?.Value,
+            Type = account.Type.ToString()
+        };
+    }
+}
+
+Design Decisions:
+✓ Queries are descriptive (GetAccount, GetAllAccounts)
+✓ Return DTOs, never domain entities (prevents accidental mutation)
+✓ Read-only operations, no side effects
+✓ Could be optimized separately from write model (future: read replicas, caching)
+
+
+SEPARATION BENEFITS
+-------------------
+Aspect          | Commands              | Queries
+----------------|----------------------|------------------------
+Purpose         | Business operations   | Data retrieval
+Validation      | Full domain rules     | Minimal (ID exists?)
+Transactions    | Required              | Optional
+Optimization    | For consistency       | For performance
+Returns         | Success/ID            | DTOs with data
+
+================================================================================
+INFRASTRUCTURE LAYER
+================================================================================
+
+REPOSITORY PATTERN
+------------------
+
+Interface (Application layer):
+
+public interface IRepository<T> where T : AggregateRoot
+{
+    Task<T?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task<IEnumerable<T>> GetAllAsync(CancellationToken ct = default);
+    Task AddAsync(T entity, CancellationToken ct = default);
+    Task UpdateAsync(T entity, CancellationToken ct = default);
+    Task DeleteAsync(T entity, CancellationToken ct = default);
+}
+
+Implementation (Infrastructure layer):
+
+public class EfRepository<T> : IRepository<T> where T : AggregateRoot
+{
+    private readonly ApplicationDbContext _context;
+
+    public async Task AddAsync(T entity, CancellationToken ct = default)
+    {
+        await _context.Set<T>().AddAsync(entity, ct);
+        await _context.SaveChangesAsync(ct);  // Unit of Work
+    }
+}
+
+Design Decisions:
+✓ Generic repository pattern (one implementation for all aggregates)
+✓ Constraint to AggregateRoot enforces DDD boundaries
+✓ Infrastructure detail (EF Core) hidden from domain
+✓ SaveChanges in repository = transaction per aggregate modification
+
+
+ENTITY FRAMEWORK CONFIGURATION
+-------------------------------
+
+Approach: Explicit Configuration over Conventions
+
+Example from AccountConfiguration.cs:
+
+public class AccountConfiguration : IEntityTypeConfiguration<Account>
+{
+    public void Configure(EntityTypeBuilder<Account> builder)
+    {
+        // Primary key
+        builder.HasKey(a => a.Id);
+
+        // Properties
+        builder.Property(a => a.Name).IsRequired().HasMaxLength(200);
+
+        // Value objects (owned types)
+        builder.OwnsOne(a => a.Email, email =>
+        {
+            email.Property(e => e.Value).HasColumnName("Email");
+        });
+
+        // Ignore collections (aggregate boundaries)
+        builder.Ignore(a => a.Contacts);  // Managed separately
+    }
+}
+
+Design Decisions:
+✓ Fluent API over data annotations (keeps domain pure)
+✓ OwnsOne for value objects (Email, Address, Money)
+✓ Ignore for collections crossing aggregate boundaries
+✓ Explicit relationship configuration (prevents EF auto-detection issues)
+
+
+DATABASE SCHEMA
+---------------
+
+PostgreSQL Tables:
+
+Accounts
+├─ Id (uuid, PK)
+├─ Name (varchar(200), NOT NULL)
+├─ Email (varchar(255))          ← Value object flattened
+├─ Street, City, State... (varchar) ← Address value object
+└─ CreatedAt, UpdatedAt (timestamp)
+
+Contacts
+├─ Id (uuid, PK)
+├─ AccountId (uuid, FK → Accounts.Id, SET NULL)
+├─ Email (varchar(255))
+└─ ...
+
+OrganizationalRelationships
+├─ Id (uuid, PK)
+├─ SourceAccountId (uuid, FK → Accounts.Id, RESTRICT)
+├─ TargetAccountId (uuid, FK → Accounts.Id, RESTRICT)
+└─ Type (enum)
+
+Design Decisions:
+✓ Value objects stored as columns in aggregate table (OwnsOne)
+✓ Relationships enforced with FK constraints
+✓ Cascade behaviors match domain rules (SET NULL, CASCADE, RESTRICT)
+✓ UUIDs for global uniqueness (distributed systems ready)
+
+================================================================================
+KEY DESIGN DECISIONS
+================================================================================
+
+1. AGGREGATE BOUNDARIES
+-----------------------
+
+Decision: Each aggregate root is a separate transaction boundary
+
+Example:
+
+// ✓ CORRECT: Modify one aggregate per operation
+var account = await _repository.GetByIdAsync(accountId);
+account.UpdateAccountInfo(name, industry, website);
+await _repository.UpdateAsync(account);
+
+// ✗ WRONG: Don't load and modify multiple aggregates
+var account = await _accountRepo.GetByIdAsync(accountId);
+var contact = await _contactRepo.GetByIdAsync(contactId);
+contact.AssignToAccount(account.Id);  // Cross-aggregate modification
+
+Rationale:
+• Ensures consistency within boundaries
+• Enables horizontal scaling
+• Reduces lock contention
+
+
+2. PRIVATE SETTERS + FACTORY METHODS
+------------------------------------
+
+Decision: All domain object creation goes through static factory methods
+
+Example:
+
+public class Opportunity : AggregateRoot
+{
+    private Opportunity() { }  // For EF Core
+
+    private Opportunity(string name, Guid accountId, Money revenue, DateTime closeDate)
+    {
+        Name = name;
+        AccountId = accountId;
+        // ... set defaults
+    }
+
+    public static Opportunity Create(string name, Guid accountId, ...)
+    {
+        // Validation
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException(...);
+
+        return new Opportunity(name, accountId, ...);
+    }
+}
+
+Rationale:
+• Enforces invariants at construction
+• Self-documenting (Create vs. constructor)
+• Prevents invalid objects from existing
+
+
+3. READ MODELS = DTOs
+---------------------
+
+Decision: Never return domain entities from queries
+
+// ✓ CORRECT
+public record AccountDto(Guid Id, string Name, string Email);
+
+public class GetAccountQueryHandler
+{
+    public async Task<AccountDto> Handle(...)
+    {
+        var account = await _repo.GetByIdAsync(id);
+        return new AccountDto(account.Id, account.Name, account.Email?.Value);
+    }
+}
+
+// ✗ WRONG
+public async Task<Account> Handle(...)
+{
+    return await _repo.GetByIdAsync(id);  // Leaks domain to presentation
+}
+
+Rationale:
+• Prevents accidental mutations from read operations
+• Allows optimized projections
+• Clear separation of concerns
+
+
+4. REPOSITORY PER AGGREGATE ROOT
+---------------------------------
+
+Decision: Generic repository constrained to aggregate roots only
+
+public interface IRepository<T> where T : AggregateRoot
+{
+    // Only aggregate roots can be repositories
+}
+
+// ✓ CORRECT
+IRepository<Account> accountRepo;
+IRepository<Opportunity> opportunityRepo;
+
+// ✗ WRONG - SalesActivity is not an aggregate root
+// IRepository<SalesActivity> activityRepo;
+
+Rationale:
+• Enforces aggregate boundaries
+• Activities accessed through Opportunity
+• Prevents bypassing domain logic
+
+
+5. INFRASTRUCTURE IGNORANCE
+----------------------------
+
+Decision: Domain layer has zero infrastructure dependencies
+
+Domain Layer Dependencies (Lama.Domain.csproj):
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+  </PropertyGroup>
+  <!-- No package references! Pure C# -->
+</Project>
+
+Rationale:
+• Domain testable without database
+• Can swap EF Core for Dapper, raw SQL, etc.
+• Domain survives infrastructure changes
+
+================================================================================
+HOW THE ARCHITECTURE DEMONSTRATES QUALITY
+================================================================================
+
+1. TESTABILITY
+--------------
+
+Domain logic testable WITHOUT database:
+
+[Fact]
+public void Account_AddContact_ShouldThrowIfDuplicate()
+{
+    var account = Account.Create("Test Corp", AccountType.Customer);
+    var contact = Contact.Create("John", "Doe", "john@test.com");
+
+    account.AddContact(contact);
+
+    Assert.Throws<InvalidOperationException>(() =>
+        account.AddContact(contact)
+    );
+}
+
+
+2. MAINTAINABILITY
+------------------
+
+Adding a new feature (e.g., "Deals"):
+
+Step 1: Add domain model → Lama.Domain/DealsManagement/Deal.cs
+Step 2: Add repository interface → (Already exists - IRepository<T>)
+Step 3: Add commands → Lama.Application/Deals/Commands/CreateDeal
+Step 4: Add queries → Lama.Application/Deals/Queries/GetDeal
+Step 5: Add controller → Lama.Api/Controllers/DealsController.cs
+Step 6: Create migration → dotnet ef migrations add AddDeals
+
+✓ Changes isolated by layer
+✓ No ripple effects across system
+
+
+3. SCALABILITY
+--------------
+
+Current State:
+• Single database (PostgreSQL)
+• Read/write use same model
+
+Future Evolution (no refactor needed):
+
+Commands → Write DB (PostgreSQL)
+    ↓
+  Events
+    ↓
+Queries ← Read DB (denormalized, cached)
+
+Why it works:
+• Commands/Queries already separated
+• DTOs already exist (no domain leakage)
+• Just change Query handlers to use read store
+
+
+4. BUSINESS LOGIC PROTECTION
+----------------------------
+
+// ✗ CANNOT happen - compiler prevents it
+var account = new Account();  // Constructor is private!
+
+// ✗ CANNOT happen - setter is private
+account.Name = "Hack";  // Compilation error
+
+// ✓ ONLY way to modify
+var account = Account.Create("Valid Corp", AccountType.Customer);
+account.UpdateAccountInfo("New Name", "Tech", "example.com");
+
+
+5. CLEAR DEPENDENCIES
+---------------------
+
+Layer Dependencies:
+API → Application → Domain
+          ↓
+    Infrastructure
+
+✓ Domain has NO dependencies
+✓ Can understand business logic without knowing database
+✓ Can test domain without infrastructure
+
+================================================================================
+VERIFICATION: END-TO-END FLOW
+================================================================================
+
+Creating an Account with Contacts
+----------------------------------
+
+STEP 1: API Layer (Lama.Api/Controllers/AccountsController.cs)
+
+[HttpPost]
+public async Task<IActionResult> Create([FromBody] CreateAccountCommand command)
+{
+    var accountId = await _mediator.Send(command);
+    return CreatedAtAction(nameof(GetById), new { id = accountId }, accountId);
+}
+
+
+STEP 2: Application Layer (Lama.Application/Accounts/Commands/CreateAccount)
+
+public record CreateAccountCommand(string Name, AccountType Type, string? Email);
+
+public class CreateAccountCommandHandler
+{
+    public async Task<Guid> Handle(CreateAccountCommand command, CancellationToken ct)
+    {
+        // Use domain factory
+        var account = Account.Create(command.Name, command.Type);
+
+        // Domain logic
+        if (command.Email != null)
+            account.SetContactInfo(command.Email, "555-0100");
+
+        // Persist
+        await _repository.AddAsync(account, ct);
+        return account.Id;
+    }
+}
+
+
+STEP 3: Domain Layer (Lama.Domain/CustomerManagement/Account.cs)
+
+public class Account : AggregateRoot
+{
+    public static Account Create(string name, AccountType type)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Name required");
+        return new Account(name, type);
+    }
+
+    public void SetContactInfo(string email, string phone)
+    {
+        Email = Email.Create(email);  // Value object validation
+        PhoneNumber = PhoneNumber.Create(phone);
+        UpdatedAt = DateTime.UtcNow;
+    }
+}
+
+
+STEP 4: Infrastructure Layer (Lama.Infrastructure/Repositories/EfRepository.cs)
+
+public async Task AddAsync(Account entity, CancellationToken ct)
+{
+    await _context.Accounts.AddAsync(entity, ct);
+    await _context.SaveChangesAsync(ct);  // Transaction
+}
+
+
+STEP 5: Database (PostgreSQL)
+
+INSERT INTO "Accounts" (
+    "Id", "Name", "Type", "Email", "PhoneNumber", "CreatedAt"
+) VALUES (
+    'uuid...', 'Acme Corp', 1, 'contact@acme.com', '555-0100', '2025-12-18...'
+);
+
+
+Notice:
+• API doesn't know about database
+• Application doesn't know about EF Core
+• Domain doesn't know about infrastructure
+• Each layer has clear responsibility
+
+================================================================================
+CONCLUSION
+================================================================================
+
+This architecture demonstrates:
+
+✓ Domain-Driven Design through bounded contexts, aggregates, value objects,
+  and domain events
+
+✓ CQRS through separated command/query handlers with different optimization
+  concerns
+
+✓ Clean Architecture with dependency inversion and infrastructure isolation
+
+✓ Maintainability through clear separation of concerns
+
+✓ Testability through pure domain logic and interface abstractions
+
+✓ Scalability through aggregate boundaries and CQRS separation
+
+The codebase is structured to SURVIVE CHANGE - business logic remains stable
+while infrastructure, UI, and optimization strategies can evolve independently.
+
+================================================================================
+END OF DOCUMENT
+================================================================================

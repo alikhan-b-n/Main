@@ -1,6 +1,7 @@
 using Lama.Application.Common;
 using Lama.Application.SalesManagement.Commands;
 using Lama.Domain.SalesManagement.Entities;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lama.Api.Controllers;
@@ -9,21 +10,21 @@ namespace Lama.Api.Controllers;
 [Route("api/[controller]")]
 public class OpportunitiesController : ControllerBase
 {
-    private readonly ICommandHandler<CreateOpportunityCommand, Guid> _createOpportunityHandler;
+    private readonly IMediator _mediator;
     private readonly IRepository<Opportunity> _opportunityRepository;
 
     public OpportunitiesController(
-        ICommandHandler<CreateOpportunityCommand, Guid> createOpportunityHandler,
+        IMediator mediator,
         IRepository<Opportunity> opportunityRepository)
     {
-        _createOpportunityHandler = createOpportunityHandler;
+        _mediator = mediator;
         _opportunityRepository = opportunityRepository;
     }
 
     [HttpPost]
     public async Task<ActionResult<Guid>> CreateOpportunity([FromBody] CreateOpportunityCommand command)
     {
-        var opportunityId = await _createOpportunityHandler.Handle(command);
+        var opportunityId = await _mediator.Send(command);
         return CreatedAtAction(nameof(GetOpportunity), new { id = opportunityId }, opportunityId);
     }
 

@@ -1,10 +1,15 @@
+using MediatR;
+
 namespace Lama.Application.Common;
 
-public interface ICommandHandler<in TCommand, TResponse> where TCommand : ICommand<TResponse>
+// Marker interface for command handlers that return a response
+public interface ICommandHandler<in TCommand, TResponse> : IRequestHandler<TCommand, TResponse>
+    where TCommand : ICommand<TResponse>
 {
-    Task<TResponse> Handle(TCommand command, CancellationToken cancellationToken = default);
 }
 
-public interface ICommandHandler<in TCommand> : ICommandHandler<TCommand, Unit> where TCommand : ICommand
+// Marker interface for command handlers that don't return a response
+public interface ICommandHandler<in TCommand> : IRequestHandler<TCommand>
+    where TCommand : ICommand
 {
 }

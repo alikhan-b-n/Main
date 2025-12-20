@@ -1,6 +1,7 @@
 using Lama.Application.Common;
 using Lama.Application.CustomerService.Commands;
 using Lama.Domain.CustomerService.Entities;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lama.Api.Controllers;
@@ -9,21 +10,21 @@ namespace Lama.Api.Controllers;
 [Route("api/[controller]")]
 public class SupportCasesController : ControllerBase
 {
-    private readonly ICommandHandler<CreateSupportCaseCommand, Guid> _createSupportCaseHandler;
+    private readonly IMediator _mediator;
     private readonly IRepository<SupportCase> _supportCaseRepository;
 
     public SupportCasesController(
-        ICommandHandler<CreateSupportCaseCommand, Guid> createSupportCaseHandler,
+        IMediator mediator,
         IRepository<SupportCase> supportCaseRepository)
     {
-        _createSupportCaseHandler = createSupportCaseHandler;
+        _mediator = mediator;
         _supportCaseRepository = supportCaseRepository;
     }
 
     [HttpPost]
     public async Task<ActionResult<Guid>> CreateSupportCase([FromBody] CreateSupportCaseCommand command)
     {
-        var caseId = await _createSupportCaseHandler.Handle(command);
+        var caseId = await _mediator.Send(command);
         return CreatedAtAction(nameof(GetSupportCase), new { id = caseId }, caseId);
     }
 

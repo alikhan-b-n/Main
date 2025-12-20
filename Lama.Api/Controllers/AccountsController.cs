@@ -2,6 +2,7 @@ using Lama.Application.Common;
 using Lama.Application.CustomerManagement.Commands;
 using Lama.Application.CustomerManagement.Queries;
 using Lama.Domain.CustomerManagement.Entities;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lama.Api.Controllers;
@@ -10,21 +11,21 @@ namespace Lama.Api.Controllers;
 [Route("api/[controller]")]
 public class AccountsController : ControllerBase
 {
-    private readonly ICommandHandler<CreateAccountCommand, Guid> _createAccountHandler;
+    private readonly IMediator _mediator;
     private readonly IRepository<Account> _accountRepository;
 
     public AccountsController(
-        ICommandHandler<CreateAccountCommand, Guid> createAccountHandler,
+        IMediator mediator,
         IRepository<Account> accountRepository)
     {
-        _createAccountHandler = createAccountHandler;
+        _mediator = mediator;
         _accountRepository = accountRepository;
     }
 
     [HttpPost]
     public async Task<ActionResult<Guid>> CreateAccount([FromBody] CreateAccountCommand command)
     {
-        var accountId = await _createAccountHandler.Handle(command);
+        var accountId = await _mediator.Send(command);
         return CreatedAtAction(nameof(GetAccount), new { id = accountId }, accountId);
     }
 

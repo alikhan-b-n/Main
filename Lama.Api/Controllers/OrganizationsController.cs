@@ -1,6 +1,7 @@
 using Lama.Application.Common;
 using Lama.Application.CustomerManagement.Commands;
 using Lama.Domain.CustomerManagement.Entities;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lama.Api.Controllers;
@@ -9,21 +10,21 @@ namespace Lama.Api.Controllers;
 [Route("api/[controller]")]
 public class OrganizationsController : ControllerBase
 {
-    private readonly ICommandHandler<CreateOrganizationCommand, Guid> _createOrganizationHandler;
+    private readonly IMediator _mediator;
     private readonly IRepository<Organization> _organizationRepository;
 
     public OrganizationsController(
-        ICommandHandler<CreateOrganizationCommand, Guid> createOrganizationHandler,
+        IMediator mediator,
         IRepository<Organization> organizationRepository)
     {
-        _createOrganizationHandler = createOrganizationHandler;
+        _mediator = mediator;
         _organizationRepository = organizationRepository;
     }
 
     [HttpPost]
     public async Task<ActionResult<Guid>> CreateOrganization([FromBody] CreateOrganizationCommand command)
     {
-        var organizationId = await _createOrganizationHandler.Handle(command);
+        var organizationId = await _mediator.Send(command);
         return CreatedAtAction(nameof(GetOrganization), new { id = organizationId }, organizationId);
     }
 

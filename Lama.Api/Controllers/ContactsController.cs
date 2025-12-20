@@ -1,6 +1,7 @@
 using Lama.Application.Common;
 using Lama.Application.CustomerManagement.Commands;
 using Lama.Domain.CustomerManagement.Entities;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lama.Api.Controllers;
@@ -9,21 +10,21 @@ namespace Lama.Api.Controllers;
 [Route("api/[controller]")]
 public class ContactsController : ControllerBase
 {
-    private readonly ICommandHandler<CreateContactCommand, Guid> _createContactHandler;
+    private readonly IMediator _mediator;
     private readonly IRepository<Contact> _contactRepository;
 
     public ContactsController(
-        ICommandHandler<CreateContactCommand, Guid> createContactHandler,
+        IMediator mediator,
         IRepository<Contact> contactRepository)
     {
-        _createContactHandler = createContactHandler;
+        _mediator = mediator;
         _contactRepository = contactRepository;
     }
 
     [HttpPost]
     public async Task<ActionResult<Guid>> CreateContact([FromBody] CreateContactCommand command)
     {
-        var contactId = await _createContactHandler.Handle(command);
+        var contactId = await _mediator.Send(command);
         return CreatedAtAction(nameof(GetContact), new { id = contactId }, contactId);
     }
 

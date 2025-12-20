@@ -1,6 +1,9 @@
+using MediatR;
+
 namespace Lama.Application.Common;
 
-public interface IQueryHandler<in TQuery, TResponse> where TQuery : IQuery<TResponse>
+// Marker interface for query handlers that return a response
+public interface IQueryHandler<in TQuery, TResponse> : IRequestHandler<TQuery, TResponse>
+    where TQuery : IQuery<TResponse>
 {
-    Task<TResponse> Handle(TQuery query, CancellationToken cancellationToken = default);
 }

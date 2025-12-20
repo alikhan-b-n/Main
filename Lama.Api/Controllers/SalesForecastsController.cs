@@ -1,6 +1,7 @@
 using Lama.Application.Common;
 using Lama.Application.SalesManagement.Commands;
 using Lama.Domain.SalesManagement.Entities;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lama.Api.Controllers;
@@ -9,21 +10,21 @@ namespace Lama.Api.Controllers;
 [Route("api/[controller]")]
 public class SalesForecastsController : ControllerBase
 {
-    private readonly ICommandHandler<CreateSalesForecastCommand, Guid> _createForecastHandler;
+    private readonly IMediator _mediator;
     private readonly IRepository<SalesForecast> _forecastRepository;
 
     public SalesForecastsController(
-        ICommandHandler<CreateSalesForecastCommand, Guid> createForecastHandler,
+        IMediator mediator,
         IRepository<SalesForecast> forecastRepository)
     {
-        _createForecastHandler = createForecastHandler;
+        _mediator = mediator;
         _forecastRepository = forecastRepository;
     }
 
     [HttpPost]
     public async Task<ActionResult<Guid>> CreateSalesForecast([FromBody] CreateSalesForecastCommand command)
     {
-        var forecastId = await _createForecastHandler.Handle(command);
+        var forecastId = await _mediator.Send(command);
         return CreatedAtAction(nameof(GetSalesForecast), new { id = forecastId }, forecastId);
     }
 

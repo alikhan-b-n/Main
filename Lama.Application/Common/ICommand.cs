@@ -1,14 +1,13 @@
+using MediatR;
+
 namespace Lama.Application.Common;
 
-public interface ICommand<out TResponse>
+// Marker interface for commands that return a response
+public interface ICommand<out TResponse> : IRequest<TResponse>
 {
 }
 
-public interface ICommand : ICommand<Unit>
+// Marker interface for commands that don't return a response
+public interface ICommand : IRequest
 {
-}
-
-public readonly struct Unit
-{
-    public static readonly Unit Value = new();
 }

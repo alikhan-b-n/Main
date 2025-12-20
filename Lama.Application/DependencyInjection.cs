@@ -1,8 +1,7 @@
-using Lama.Application.Common;
-using Lama.Application.CustomerManagement.Commands;
-using Lama.Application.CustomerService.Commands;
-using Lama.Application.MarketingManagement.Commands;
-using Lama.Application.SalesManagement.Commands;
+using System.Reflection;
+using FluentValidation;
+using Lama.Application.Common.Behaviors;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lama.Application;
@@ -11,20 +10,19 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        // Register Customer Management command handlers
-        services.AddScoped<ICommandHandler<CreateAccountCommand, Guid>, CreateAccountCommandHandler>();
-        services.AddScoped<ICommandHandler<CreateContactCommand, Guid>, CreateContactCommandHandler>();
-        services.AddScoped<ICommandHandler<CreateOrganizationCommand, Guid>, CreateOrganizationCommandHandler>();
+        // Register MediatR and automatically discover all handlers in this assembly
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
 
-        // Register Sales Management command handlers
-        services.AddScoped<ICommandHandler<CreateOpportunityCommand, Guid>, CreateOpportunityCommandHandler>();
-        services.AddScoped<ICommandHandler<CreateSalesForecastCommand, Guid>, CreateSalesForecastCommandHandler>();
+            // Register pipeline behaviors in order of execution
+            cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
+            cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+            cfg.AddOpenBehavior(typeof(PerformanceBehavior<,>));
+        });
 
-        // Register Marketing Management command handlers
-        services.AddScoped<ICommandHandler<CreateMarketingAnalyticsCommand, Guid>, CreateMarketingAnalyticsCommandHandler>();
-
-        // Register Customer Service command handlers
-        services.AddScoped<ICommandHandler<CreateSupportCaseCommand, Guid>, CreateSupportCaseCommandHandler>();
+        // Register all validators from this assembly for FluentValidation
+        services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
         return services;
     }

@@ -1,6 +1,7 @@
 using Lama.Application.Common;
 using Lama.Application.MarketingManagement.Commands;
 using Lama.Domain.MarketingManagement.Entities;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lama.Api.Controllers;
@@ -9,21 +10,21 @@ namespace Lama.Api.Controllers;
 [Route("api/[controller]")]
 public class MarketingAnalyticsController : ControllerBase
 {
-    private readonly ICommandHandler<CreateMarketingAnalyticsCommand, Guid> _createAnalyticsHandler;
+    private readonly IMediator _mediator;
     private readonly IRepository<MarketingAnalytics> _analyticsRepository;
 
     public MarketingAnalyticsController(
-        ICommandHandler<CreateMarketingAnalyticsCommand, Guid> createAnalyticsHandler,
+        IMediator mediator,
         IRepository<MarketingAnalytics> analyticsRepository)
     {
-        _createAnalyticsHandler = createAnalyticsHandler;
+        _mediator = mediator;
         _analyticsRepository = analyticsRepository;
     }
 
     [HttpPost]
     public async Task<ActionResult<Guid>> CreateMarketingAnalytics([FromBody] CreateMarketingAnalyticsCommand command)
     {
-        var analyticsId = await _createAnalyticsHandler.Handle(command);
+        var analyticsId = await _mediator.Send(command);
         return CreatedAtAction(nameof(GetMarketingAnalytics), new { id = analyticsId }, analyticsId);
     }
 
