@@ -1,0 +1,194 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col">
+      <h2>
+        <i class="bi bi-briefcase"></i>
+        Create New Deal
+      </h2>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8 col-xl-6">
+      <div class="card">
+        <div class="card-body">
+          <form [formGroup]="dealForm" (ngSubmit)="onSubmit()">
+            <!-- Deal Name -->
+            <div class="mb-3">
+              <label for="name" class="form-label">
+                Deal Name <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                [class.is-invalid]="isFieldInvalid('name')"
+                id="name"
+                formControlName="name"
+                placeholder="Enter deal name"
+              />
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('name')">
+                {{ getFieldError('name') }}
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-3">
+              <label for="description" class="form-label">Description</label>
+              <textarea
+                class="form-control"
+                id="description"
+                formControlName="description"
+                rows="3"
+                placeholder="Enter deal description"
+              ></textarea>
+            </div>
+
+            <!-- Company ID -->
+            <div class="mb-3">
+              <label for="companyId" class="form-label">
+                Company ID <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                [class.is-invalid]="isFieldInvalid('companyId')"
+                id="companyId"
+                formControlName="companyId"
+                placeholder="Enter company ID"
+              />
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('companyId')">
+                {{ getFieldError('companyId') }}
+              </div>
+            </div>
+
+            <!-- Amount and Currency -->
+            <div class="row">
+              <div class="col-md-8">
+                <div class="mb-3">
+                  <label for="amount" class="form-label">
+                    Amount <span class="text-danger">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [class.is-invalid]="isFieldInvalid('amount')"
+                    id="amount"
+                    formControlName="amount"
+                    placeholder="0.00"
+                  />
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('amount')">
+                    {{ getFieldError('amount') }}
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="mb-3">
+                  <label for="currency" class="form-label">Currency</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="currency"
+                    formControlName="currency"
+                    placeholder="USD"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Expected Close Date -->
+            <div class="mb-3">
+              <label for="expectedCloseDate" class="form-label">
+                Expected Close Date <span class="text-danger">*</span>
+              </label>
+              <input
+                type="date"
+                class="form-control"
+                [class.is-invalid]="isFieldInvalid('expectedCloseDate')"
+                id="expectedCloseDate"
+                formControlName="expectedCloseDate"
+              />
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('expectedCloseDate')">
+                {{ getFieldError('expectedCloseDate') }}
+              </div>
+            </div>
+
+            <!-- Pipeline ID -->
+            <div class="mb-3">
+              <label for="pipelineId" class="form-label">
+                Pipeline ID <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                [class.is-invalid]="isFieldInvalid('pipelineId')"
+                id="pipelineId"
+                formControlName="pipelineId"
+                placeholder="Enter pipeline ID"
+              />
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('pipelineId')">
+                {{ getFieldError('pipelineId') }}
+              </div>
+            </div>
+
+            <!-- Stage ID -->
+            <div class="mb-3">
+              <label for="stageId" class="form-label">
+                Stage ID <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                [class.is-invalid]="isFieldInvalid('stageId')"
+                id="stageId"
+                formControlName="stageId"
+                placeholder="Enter stage ID"
+              />
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('stageId')">
+                {{ getFieldError('stageId') }}
+              </div>
+            </div>
+
+            <!-- Contact ID (optional) -->
+            <div class="mb-3">
+              <label for="contactId" class="form-label">Contact ID</label>
+              <input
+                type="text"
+                class="form-control"
+                id="contactId"
+                formControlName="contactId"
+                placeholder="Enter contact ID (optional)"
+              />
+            </div>
+
+            <!-- Form Actions -->
+            <div class="d-flex gap-2 justify-content-end">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="cancel()"
+                [disabled]="isSubmitting"
+              >
+                <i class="bi bi-x-circle me-1"></i>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="btn btn-success"
+                [disabled]="!dealForm.valid || isSubmitting"
+              >
+                <span *ngIf="!isSubmitting">
+                  <i class="bi bi-check-circle me-1"></i>
+                  Create Deal
+                </span>
+                <span *ngIf="isSubmitting">
+                  <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                  Creating...
+                </span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

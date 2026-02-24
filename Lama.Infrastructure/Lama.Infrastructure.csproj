@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Lama.Domain\Lama.Domain.csproj" />
     <ProjectReference Include="..\Lama.Application\Lama.Application.csproj" />
+    <ProjectReference Include="..\Integrations\Lama.Integrations.AI\Lama.Integrations.AI.csproj" />
   </ItemGroup>
 
   <ItemGroup>

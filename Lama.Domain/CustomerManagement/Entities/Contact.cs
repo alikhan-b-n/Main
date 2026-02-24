@@ -10,8 +10,12 @@ public class Contact : AggregateRoot
     public Email Email { get; private set; }
     public PhoneNumber? PhoneNumber { get; private set; }
     public string? JobTitle { get; private set; }
-    public Guid? AccountId { get; private set; }
-    public Account? Account { get; private set; }
+    public Guid? CompanyId { get; private set; }
+    public Company? Company { get; private set; }
+    public Guid? OwnerId { get; private set; }
+    public DateTime LastActivityAt { get; private set; }
+    public string? LifecycleStage { get; private set; }
+    public decimal TotalRevenueContribution { get; private set; }
 
     private Contact() { }
 
@@ -20,6 +24,9 @@ public class Contact : AggregateRoot
         FirstName = firstName;
         LastName = lastName;
         Email = email;
+        LifecycleStage = "Lead";
+        TotalRevenueContribution = 0;
+        LastActivityAt = DateTime.UtcNow;
     }
 
     public static Contact Create(string firstName, string lastName, string email)
@@ -51,9 +58,34 @@ public class Contact : AggregateRoot
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void AssignToAccount(Guid accountId)
+    public void AssignToCompany(Guid companyId)
     {
-        AccountId = accountId;
+        CompanyId = companyId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void AssignToOwner(Guid ownerId)
+    {
+        OwnerId = ownerId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateLifecycleStage(string stage)
+    {
+        // Stages: Lead, MQL, SQL, Opportunity, Customer, Evangelist
+        LifecycleStage = stage;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void RecordRevenueContribution(decimal amount)
+    {
+        TotalRevenueContribution += amount;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateLastActivity()
+    {
+        LastActivityAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
 

@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lama.Application", "Lama.Ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lama.Infrastructure", "Lama.Infrastructure\Lama.Infrastructure.csproj", "{D8F71A90-23AA-4565-8F64-D49CEF23FE65}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integrations", "Integrations", "{D718CE0C-0365-4942-8374-193DC1774542}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lama.Integrations.AI", "Integrations\Lama.Integrations.AI\Lama.Integrations.AI.csproj", "{A807295F-C34B-4D60-8FE2-C8EAF4047F50}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,5 +35,12 @@ Global
 		{D8F71A90-23AA-4565-8F64-D49CEF23FE65}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D8F71A90-23AA-4565-8F64-D49CEF23FE65}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D8F71A90-23AA-4565-8F64-D49CEF23FE65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A807295F-C34B-4D60-8FE2-C8EAF4047F50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A807295F-C34B-4D60-8FE2-C8EAF4047F50}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A807295F-C34B-4D60-8FE2-C8EAF4047F50}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A807295F-C34B-4D60-8FE2-C8EAF4047F50}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A807295F-C34B-4D60-8FE2-C8EAF4047F50} = {D718CE0C-0365-4942-8374-193DC1774542}
 	EndGlobalSection
 EndGlobal

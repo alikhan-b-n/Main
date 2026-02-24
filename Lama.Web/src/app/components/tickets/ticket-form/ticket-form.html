@@ -1,0 +1,213 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col">
+      <h2>
+        <i class="bi bi-life-preserver"></i>
+        Create New Ticket
+      </h2>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8 col-xl-6">
+      <div class="card">
+        <div class="card-body">
+          <form [formGroup]="ticketForm" (ngSubmit)="onSubmit()">
+            <!-- Ticket Name -->
+            <div class="mb-3">
+              <label for="ticketName" class="form-label">
+                Ticket Name <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                [class.is-invalid]="isFieldInvalid('ticketName')"
+                id="ticketName"
+                formControlName="ticketName"
+                placeholder="Enter ticket name"
+              />
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('ticketName')">
+                {{ getFieldError('ticketName') }}
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-3">
+              <label for="description" class="form-label">
+                Description <span class="text-danger">*</span>
+              </label>
+              <textarea
+                class="form-control"
+                [class.is-invalid]="isFieldInvalid('description')"
+                id="description"
+                formControlName="description"
+                rows="4"
+                placeholder="Describe the issue or request"
+              ></textarea>
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('description')">
+                {{ getFieldError('description') }}
+              </div>
+            </div>
+
+            <!-- Status and Priority -->
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="status" class="form-label">
+                    Status <span class="text-danger">*</span>
+                  </label>
+                  <select
+                    class="form-select"
+                    [class.is-invalid]="isFieldInvalid('status')"
+                    id="status"
+                    formControlName="status"
+                  >
+                    <option *ngFor="let status of statusOptions" [value]="status">
+                      {{ status }}
+                    </option>
+                  </select>
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('status')">
+                    {{ getFieldError('status') }}
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="priority" class="form-label">
+                    Priority <span class="text-danger">*</span>
+                  </label>
+                  <select
+                    class="form-select"
+                    [class.is-invalid]="isFieldInvalid('priority')"
+                    id="priority"
+                    formControlName="priority"
+                  >
+                    <option *ngFor="let priority of priorityOptions" [value]="priority">
+                      {{ priority }}
+                    </option>
+                  </select>
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('priority')">
+                    {{ getFieldError('priority') }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Source -->
+            <div class="mb-3">
+              <label for="source" class="form-label">
+                Source <span class="text-danger">*</span>
+              </label>
+              <select
+                class="form-select"
+                [class.is-invalid]="isFieldInvalid('source')"
+                id="source"
+                formControlName="source"
+              >
+                <option *ngFor="let source of sourceOptions" [value]="source">
+                  {{ source }}
+                </option>
+              </select>
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('source')">
+                {{ getFieldError('source') }}
+              </div>
+            </div>
+
+            <!-- Contact ID -->
+            <div class="mb-3">
+              <label for="contactId" class="form-label">
+                Contact ID <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                [class.is-invalid]="isFieldInvalid('contactId')"
+                id="contactId"
+                formControlName="contactId"
+                placeholder="Enter contact ID"
+              />
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('contactId')">
+                {{ getFieldError('contactId') }}
+              </div>
+            </div>
+
+            <!-- Pipeline ID -->
+            <div class="mb-3">
+              <label for="pipelineId" class="form-label">
+                Pipeline ID <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                [class.is-invalid]="isFieldInvalid('pipelineId')"
+                id="pipelineId"
+                formControlName="pipelineId"
+                placeholder="Enter pipeline ID"
+              />
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('pipelineId')">
+                {{ getFieldError('pipelineId') }}
+              </div>
+            </div>
+
+            <!-- Stage ID -->
+            <div class="mb-3">
+              <label for="stageId" class="form-label">
+                Stage ID <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                [class.is-invalid]="isFieldInvalid('stageId')"
+                id="stageId"
+                formControlName="stageId"
+                placeholder="Enter stage ID"
+              />
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('stageId')">
+                {{ getFieldError('stageId') }}
+              </div>
+            </div>
+
+            <!-- Company ID (optional) -->
+            <div class="mb-3">
+              <label for="companyId" class="form-label">Company ID</label>
+              <input
+                type="text"
+                class="form-control"
+                id="companyId"
+                formControlName="companyId"
+                placeholder="Enter company ID (optional)"
+              />
+            </div>
+
+            <!-- Form Actions -->
+            <div class="d-flex gap-2 justify-content-end">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="cancel()"
+                [disabled]="isSubmitting"
+              >
+                <i class="bi bi-x-circle me-1"></i>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="btn btn-success"
+                [disabled]="!ticketForm.valid || isSubmitting"
+              >
+                <span *ngIf="!isSubmitting">
+                  <i class="bi bi-check-circle me-1"></i>
+                  Create Ticket
+                </span>
+                <span *ngIf="isSubmitting">
+                  <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                  Creating...
+                </span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

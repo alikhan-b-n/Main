@@ -9,7 +9,8 @@ public record CreateContactCommand(
     string Email,
     string? PhoneNumber = null,
     string? JobTitle = null,
-    Guid? AccountId = null
+    Guid? CompanyId = null,
+    Guid? OwnerId = null
 ) : ICommand<Guid>;
 
 public class CreateContactCommandHandler : ICommandHandler<CreateContactCommand, Guid>
@@ -35,9 +36,14 @@ public class CreateContactCommandHandler : ICommandHandler<CreateContactCommand,
             contact.UpdateContactInfo(command.FirstName, command.LastName, command.JobTitle);
         }
 
-        if (command.AccountId.HasValue)
+        if (command.CompanyId.HasValue)
         {
-            contact.AssignToAccount(command.AccountId.Value);
+            contact.AssignToCompany(command.CompanyId.Value);
+        }
+
+        if (command.OwnerId.HasValue)
+        {
+            contact.AssignToOwner(command.OwnerId.Value);
         }
 
         await _contactRepository.AddAsync(contact, cancellationToken);

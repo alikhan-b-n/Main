@@ -1,5 +1,6 @@
 using Lama.Application.Common;
 using Lama.Application.CustomerManagement.Commands;
+using Lama.Application.CustomerManagement.Queries;
 using Lama.Domain.CustomerManagement.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Lama.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("crm/objects/contacts")]
 public class ContactsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -40,9 +41,29 @@ public class ContactsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Contact>>> GetAllContacts()
+    public async Task<ActionResult<IEnumerable<ContactDto>>> GetAllContacts()
     {
-        var contacts = await _contactRepository.GetAllAsync();
+        var query = new GetAllContactsQuery();
+        var contacts = await _mediator.Send(query);
+
         return Ok(contacts);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateContact(Guid id, [FromBody] UpdateContactCommand command)
+    {
+        if (id != command.Id)
+            return BadRequest(new { message = "ID mismatch" });
+
+        await _mediator.Send(command);
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteContact(Guid id)
+    {
+        var command = new DeleteContactCommand(id);
+        await _mediator.Send(command);
+        return NoContent();
     }
 }

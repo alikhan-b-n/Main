@@ -22,37 +22,141 @@ namespace Lama.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Lama.Domain.CustomerManagement.Entities.Account", b =>
+            modelBuilder.Entity("Lama.Domain.ActivityManagement.Entities.Activity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AiMetadata")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Body")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ContactId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid?>("DealId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("OwnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Summary")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("TicketId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Activities");
+                });
+
+            modelBuilder.Entity("Lama.Domain.CustomerManagement.Entities.ClientCategory", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DiscountPolicy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("PriorityLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ClientCategories");
+                });
+
+            modelBuilder.Entity("Lama.Domain.CustomerManagement.Entities.Company", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ClientCategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Domain")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("Industry")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("LastActivityAt")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("TotalSpent")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Website")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Accounts");
+                    b.HasIndex("ClientCategoryId");
+
+                    b.HasIndex("Domain");
+
+                    b.HasIndex("Name");
+
+                    b.ToTable("Companies", (string)null);
                 });
 
             modelBuilder.Entity("Lama.Domain.CustomerManagement.Entities.Contact", b =>
@@ -61,11 +165,11 @@ namespace Lama.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("AccountId")
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -76,558 +180,310 @@ namespace Lama.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<DateTime>("LastActivityAt")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AccountId");
-
-                    b.ToTable("Contacts");
-                });
-
-            modelBuilder.Entity("Lama.Domain.CustomerManagement.Entities.Organization", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<decimal?>("AnnualRevenue")
-                        .HasColumnType("numeric");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("EmployeeCount")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("FoundedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Industry")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
-
-                    b.Property<string>("LegalName")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<Guid?>("ParentOrganizationId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Size")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("StockSymbol")
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
-                    b.Property<string>("TaxId")
+                    b.Property<string>("LifecycleStage")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                    b.Property<Guid?>("OwnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("TotalRevenueContribution")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Website")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ParentOrganizationId");
+                    b.HasIndex("CompanyId");
 
-                    b.ToTable("Organizations");
+                    b.HasIndex("LifecycleStage");
+
+                    b.HasIndex("OwnerId");
+
+                    b.ToTable("Contacts", (string)null);
                 });
 
-            modelBuilder.Entity("Lama.Domain.CustomerManagement.Entities.OrganizationalRelationship", b =>
+            modelBuilder.Entity("Lama.Domain.CustomerService.Entities.Ticket", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid?>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ContactId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<Guid>("SourceAccountId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("TargetAccountId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SourceAccountId");
-
-                    b.HasIndex("TargetAccountId");
-
-                    b.ToTable("OrganizationalRelationships");
-                });
-
-            modelBuilder.Entity("Lama.Domain.CustomerService.Entities.CaseInteraction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CaseId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Content")
                         .IsRequired()
-                        .HasMaxLength(5000)
-                        .HasColumnType("character varying(5000)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<Guid?>("OwnerId")
+                        .HasColumnType("uuid");
 
-                    b.Property<int>("Direction")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("PipelineId")
+                        .HasColumnType("uuid");
 
-                    b.Property<int?>("DurationMinutes")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("InteractionDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Subject")
+                    b.Property<string>("Priority")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("StageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TicketName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CaseId");
+                    b.HasIndex("CompanyId");
 
-                    b.ToTable("CaseInteractions");
+                    b.HasIndex("ContactId");
+
+                    b.HasIndex("OwnerId");
+
+                    b.HasIndex("PipelineId");
+
+                    b.HasIndex("StageId");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("Tickets", (string)null);
                 });
 
-            modelBuilder.Entity("Lama.Domain.CustomerService.Entities.ServiceWorkflow", b =>
+            modelBuilder.Entity("Lama.Domain.PipelineManagement.Entities.Pipeline", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<int>("TriggerCaseType")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ServiceWorkflows");
-                });
-
-            modelBuilder.Entity("Lama.Domain.CustomerService.Entities.SupportCase", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("AccountId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("AssignedToUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("ClosedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ContactId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(5000)
-                        .HasColumnType("character varying(5000)");
-
-                    b.Property<int>("Priority")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Resolution")
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("ResolvedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
-                    b.ToTable("SupportCases");
+                    b.ToTable("Pipelines");
                 });
 
-            modelBuilder.Entity("Lama.Domain.MarketingManagement.Entities.Campaign", b =>
+            modelBuilder.Entity("Lama.Domain.PipelineManagement.Entities.Stage", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<decimal>("ActualCost")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("Budget")
-                        .HasColumnType("numeric");
-
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<bool>("IsClosed")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("text");
 
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Status")
+                    b.Property<int>("Order")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Type")
+                    b.Property<Guid>("PipelineId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("Probability")
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Campaigns");
+                    b.HasIndex("PipelineId");
+
+                    b.ToTable("Stages");
                 });
 
-            modelBuilder.Entity("Lama.Domain.MarketingManagement.Entities.CampaignMetric", b =>
+            modelBuilder.Entity("Lama.Domain.SalesManagement.Entities.Deal", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CampaignId")
-                        .HasColumnType("uuid");
+                    b.Property<DateTime?>("ActualCloseDate")
+                        .HasColumnType("timestamp without time zone");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("MetricType")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<DateTime>("RecordedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("Value")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CampaignId");
-
-                    b.ToTable("CampaignMetrics");
-                });
-
-            modelBuilder.Entity("Lama.Domain.MarketingManagement.Entities.CustomerSegment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<int>("EstimatedSize")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("CustomerSegments");
-                });
-
-            modelBuilder.Entity("Lama.Domain.MarketingManagement.Entities.MarketingAnalytics", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("CampaignId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<DateTime>("PeriodEnd")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("PeriodStart")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CampaignId");
-
-                    b.ToTable("MarketingAnalytics");
-                });
-
-            modelBuilder.Entity("Lama.Domain.SalesManagement.Entities.Opportunity", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("AccountId")
+                    b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid?>("ContactId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
                     b.Property<DateTime>("ExpectedCloseDate")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<Guid?>("PipelineId")
+                    b.Property<Guid?>("OwnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PipelineId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Probability")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Stage")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("StageId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("ContactId");
+
+                    b.HasIndex("OwnerId");
 
                     b.HasIndex("PipelineId");
 
-                    b.ToTable("Opportunities");
+                    b.HasIndex("StageId");
+
+                    b.ToTable("Deals", (string)null);
                 });
 
-            modelBuilder.Entity("Lama.Domain.SalesManagement.Entities.SalesActivity", b =>
+            modelBuilder.Entity("Lama.Domain.UserManagement.Entities.Employee", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime?>("CompletedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("ContactId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<Guid>("OpportunityId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("ScheduledDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Subject")
+                    b.Property<string>("Email")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OpportunityId");
-
-                    b.ToTable("SalesActivities");
-                });
-
-            modelBuilder.Entity("Lama.Domain.SalesManagement.Entities.SalesForecast", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<decimal>("ConfidenceLevel")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("numeric(5,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<int>("Period")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SalesForecasts");
-                });
-
-            modelBuilder.Entity("Lama.Domain.SalesManagement.Entities.SalesPipeline", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("text");
+
+                    b.Property<string>("Role")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
 
-                    b.ToTable("SalesPipelines");
+                    b.ToTable("Employees");
                 });
 
-            modelBuilder.Entity("Lama.Domain.CustomerManagement.Entities.Account", b =>
+            modelBuilder.Entity("Lama.Domain.CustomerManagement.Entities.Company", b =>
                 {
+                    b.OwnsOne("Lama.Domain.CustomerManagement.ValueObjects.Email", "Email", b1 =>
+                        {
+                            b1.Property<Guid>("CompanyId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(255)
+                                .HasColumnType("character varying(255)")
+                                .HasColumnName("Email");
+
+                            b1.HasKey("CompanyId");
+
+                            b1.ToTable("Companies");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CompanyId");
+                        });
+
+                    b.OwnsOne("Lama.Domain.CustomerManagement.ValueObjects.PhoneNumber", "PhoneNumber", b1 =>
+                        {
+                            b1.Property<Guid>("CompanyId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("character varying(50)")
+                                .HasColumnName("PhoneNumber");
+
+                            b1.HasKey("CompanyId");
+
+                            b1.ToTable("Companies");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CompanyId");
+                        });
+
                     b.OwnsOne("Lama.Domain.CustomerManagement.ValueObjects.Address", "Address", b1 =>
                         {
-                            b1.Property<Guid>("AccountId")
+                            b1.Property<Guid>("CompanyId")
                                 .HasColumnType("uuid");
 
                             b1.Property<string>("City")
@@ -660,50 +516,12 @@ namespace Lama.Infrastructure.Migrations
                                 .HasColumnType("character varying(255)")
                                 .HasColumnName("Street");
 
-                            b1.HasKey("AccountId");
+                            b1.HasKey("CompanyId");
 
-                            b1.ToTable("Accounts");
-
-                            b1.WithOwner()
-                                .HasForeignKey("AccountId");
-                        });
-
-                    b.OwnsOne("Lama.Domain.CustomerManagement.ValueObjects.Email", "Email", b1 =>
-                        {
-                            b1.Property<Guid>("AccountId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(255)
-                                .HasColumnType("character varying(255)")
-                                .HasColumnName("Email");
-
-                            b1.HasKey("AccountId");
-
-                            b1.ToTable("Accounts");
+                            b1.ToTable("Companies");
 
                             b1.WithOwner()
-                                .HasForeignKey("AccountId");
-                        });
-
-                    b.OwnsOne("Lama.Domain.CustomerManagement.ValueObjects.PhoneNumber", "PhoneNumber", b1 =>
-                        {
-                            b1.Property<Guid>("AccountId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("character varying(50)")
-                                .HasColumnName("PhoneNumber");
-
-                            b1.HasKey("AccountId");
-
-                            b1.ToTable("Accounts");
-
-                            b1.WithOwner()
-                                .HasForeignKey("AccountId");
+                                .HasForeignKey("CompanyId");
                         });
 
                     b.Navigation("Address");
@@ -715,9 +533,9 @@ namespace Lama.Infrastructure.Migrations
 
             modelBuilder.Entity("Lama.Domain.CustomerManagement.Entities.Contact", b =>
                 {
-                    b.HasOne("Lama.Domain.CustomerManagement.Entities.Account", "Account")
-                        .WithMany()
-                        .HasForeignKey("AccountId")
+                    b.HasOne("Lama.Domain.CustomerManagement.Entities.Company", "Company")
+                        .WithMany("Contacts")
+                        .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.OwnsOne("Lama.Domain.CustomerManagement.ValueObjects.Email", "Email", b1 =>
@@ -758,7 +576,7 @@ namespace Lama.Infrastructure.Migrations
                                 .HasForeignKey("ContactId");
                         });
 
-                    b.Navigation("Account");
+                    b.Navigation("Company");
 
                     b.Navigation("Email")
                         .IsRequired();
@@ -766,284 +584,53 @@ namespace Lama.Infrastructure.Migrations
                     b.Navigation("PhoneNumber");
                 });
 
-            modelBuilder.Entity("Lama.Domain.CustomerManagement.Entities.Organization", b =>
+            modelBuilder.Entity("Lama.Domain.PipelineManagement.Entities.Stage", b =>
                 {
-                    b.HasOne("Lama.Domain.CustomerManagement.Entities.Organization", "ParentOrganization")
-                        .WithMany()
-                        .HasForeignKey("ParentOrganizationId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.OwnsOne("Lama.Domain.CustomerManagement.ValueObjects.Address", "HeadquartersAddress", b1 =>
-                        {
-                            b1.Property<Guid>("OrganizationId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("City")
-                                .IsRequired()
-                                .HasMaxLength(100)
-                                .HasColumnType("character varying(100)")
-                                .HasColumnName("HeadquartersCity");
-
-                            b1.Property<string>("Country")
-                                .IsRequired()
-                                .HasMaxLength(100)
-                                .HasColumnType("character varying(100)")
-                                .HasColumnName("HeadquartersCountry");
-
-                            b1.Property<string>("PostalCode")
-                                .IsRequired()
-                                .HasMaxLength(20)
-                                .HasColumnType("character varying(20)")
-                                .HasColumnName("HeadquartersPostalCode");
-
-                            b1.Property<string>("State")
-                                .IsRequired()
-                                .HasMaxLength(100)
-                                .HasColumnType("character varying(100)")
-                                .HasColumnName("HeadquartersState");
-
-                            b1.Property<string>("Street")
-                                .IsRequired()
-                                .HasMaxLength(255)
-                                .HasColumnType("character varying(255)")
-                                .HasColumnName("HeadquartersStreet");
-
-                            b1.HasKey("OrganizationId");
-
-                            b1.ToTable("Organizations");
-
-                            b1.WithOwner()
-                                .HasForeignKey("OrganizationId");
-                        });
-
-                    b.OwnsOne("Lama.Domain.CustomerManagement.ValueObjects.Email", "PrimaryEmail", b1 =>
-                        {
-                            b1.Property<Guid>("OrganizationId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(255)
-                                .HasColumnType("character varying(255)")
-                                .HasColumnName("PrimaryEmail");
-
-                            b1.HasKey("OrganizationId");
-
-                            b1.ToTable("Organizations");
-
-                            b1.WithOwner()
-                                .HasForeignKey("OrganizationId");
-                        });
-
-                    b.OwnsOne("Lama.Domain.CustomerManagement.ValueObjects.PhoneNumber", "PrimaryPhone", b1 =>
-                        {
-                            b1.Property<Guid>("OrganizationId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("character varying(50)")
-                                .HasColumnName("PrimaryPhone");
-
-                            b1.HasKey("OrganizationId");
-
-                            b1.ToTable("Organizations");
-
-                            b1.WithOwner()
-                                .HasForeignKey("OrganizationId");
-                        });
-
-                    b.Navigation("HeadquartersAddress");
-
-                    b.Navigation("ParentOrganization");
-
-                    b.Navigation("PrimaryEmail");
-
-                    b.Navigation("PrimaryPhone");
-                });
-
-            modelBuilder.Entity("Lama.Domain.CustomerManagement.Entities.OrganizationalRelationship", b =>
-                {
-                    b.HasOne("Lama.Domain.CustomerManagement.Entities.Account", "SourceAccount")
-                        .WithMany()
-                        .HasForeignKey("SourceAccountId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Lama.Domain.CustomerManagement.Entities.Account", "TargetAccount")
-                        .WithMany()
-                        .HasForeignKey("TargetAccountId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("SourceAccount");
-
-                    b.Navigation("TargetAccount");
-                });
-
-            modelBuilder.Entity("Lama.Domain.CustomerService.Entities.CaseInteraction", b =>
-                {
-                    b.HasOne("Lama.Domain.CustomerService.Entities.SupportCase", "Case")
-                        .WithMany()
-                        .HasForeignKey("CaseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Case");
-                });
-
-            modelBuilder.Entity("Lama.Domain.MarketingManagement.Entities.CampaignMetric", b =>
-                {
-                    b.HasOne("Lama.Domain.MarketingManagement.Entities.Campaign", "Campaign")
-                        .WithMany()
-                        .HasForeignKey("CampaignId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Campaign");
-                });
-
-            modelBuilder.Entity("Lama.Domain.MarketingManagement.Entities.MarketingAnalytics", b =>
-                {
-                    b.HasOne("Lama.Domain.MarketingManagement.Entities.Campaign", "Campaign")
-                        .WithMany()
-                        .HasForeignKey("CampaignId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Campaign");
-                });
-
-            modelBuilder.Entity("Lama.Domain.SalesManagement.Entities.Opportunity", b =>
-                {
-                    b.HasOne("Lama.Domain.SalesManagement.Entities.SalesPipeline", "Pipeline")
-                        .WithMany()
+                    b.HasOne("Lama.Domain.PipelineManagement.Entities.Pipeline", null)
+                        .WithMany("Stages")
                         .HasForeignKey("PipelineId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.OwnsOne("Lama.Domain.SalesManagement.ValueObjects.Money", "ExpectedRevenue", b1 =>
-                        {
-                            b1.Property<Guid>("OpportunityId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<decimal>("Amount")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("ExpectedRevenueAmount");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .HasMaxLength(3)
-                                .HasColumnType("character varying(3)")
-                                .HasColumnName("ExpectedRevenueCurrency");
-
-                            b1.HasKey("OpportunityId");
-
-                            b1.ToTable("Opportunities");
-
-                            b1.WithOwner()
-                                .HasForeignKey("OpportunityId");
-                        });
-
-                    b.Navigation("ExpectedRevenue")
-                        .IsRequired();
-
-                    b.Navigation("Pipeline");
-                });
-
-            modelBuilder.Entity("Lama.Domain.SalesManagement.Entities.SalesActivity", b =>
-                {
-                    b.HasOne("Lama.Domain.SalesManagement.Entities.Opportunity", "Opportunity")
-                        .WithMany()
-                        .HasForeignKey("OpportunityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Opportunity");
                 });
 
-            modelBuilder.Entity("Lama.Domain.SalesManagement.Entities.SalesForecast", b =>
+            modelBuilder.Entity("Lama.Domain.SalesManagement.Entities.Deal", b =>
                 {
-                    b.OwnsOne("Lama.Domain.SalesManagement.ValueObjects.Money", "ActualRevenue", b1 =>
+                    b.OwnsOne("Lama.Domain.SalesManagement.ValueObjects.Money", "Amount", b1 =>
                         {
-                            b1.Property<Guid>("SalesForecastId")
+                            b1.Property<Guid>("DealId")
                                 .HasColumnType("uuid");
 
                             b1.Property<decimal>("Amount")
                                 .HasPrecision(18, 2)
                                 .HasColumnType("numeric(18,2)")
-                                .HasColumnName("ActualRevenueAmount");
+                                .HasColumnName("Amount");
 
                             b1.Property<string>("Currency")
                                 .IsRequired()
                                 .HasMaxLength(3)
                                 .HasColumnType("character varying(3)")
-                                .HasColumnName("ActualRevenueCurrency");
+                                .HasColumnName("Currency");
 
-                            b1.HasKey("SalesForecastId");
+                            b1.HasKey("DealId");
 
-                            b1.ToTable("SalesForecasts");
-
-                            b1.WithOwner()
-                                .HasForeignKey("SalesForecastId");
-                        });
-
-                    b.OwnsOne("Lama.Domain.SalesManagement.ValueObjects.Money", "ProjectedRevenue", b1 =>
-                        {
-                            b1.Property<Guid>("SalesForecastId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<decimal>("Amount")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("ProjectedRevenueAmount");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .HasMaxLength(3)
-                                .HasColumnType("character varying(3)")
-                                .HasColumnName("ProjectedRevenueCurrency");
-
-                            b1.HasKey("SalesForecastId");
-
-                            b1.ToTable("SalesForecasts");
+                            b1.ToTable("Deals");
 
                             b1.WithOwner()
-                                .HasForeignKey("SalesForecastId");
+                                .HasForeignKey("DealId");
                         });
 
-                    b.OwnsOne("Lama.Domain.SalesManagement.ValueObjects.Money", "Quota", b1 =>
-                        {
-                            b1.Property<Guid>("SalesForecastId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<decimal>("Amount")
-                                .HasPrecision(18, 2)
-                                .HasColumnType("numeric(18,2)")
-                                .HasColumnName("QuotaAmount");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .HasMaxLength(3)
-                                .HasColumnType("character varying(3)")
-                                .HasColumnName("QuotaCurrency");
-
-                            b1.HasKey("SalesForecastId");
-
-                            b1.ToTable("SalesForecasts");
-
-                            b1.WithOwner()
-                                .HasForeignKey("SalesForecastId");
-                        });
-
-                    b.Navigation("ActualRevenue")
+                    b.Navigation("Amount")
                         .IsRequired();
+                });
 
-                    b.Navigation("ProjectedRevenue")
-                        .IsRequired();
+            modelBuilder.Entity("Lama.Domain.CustomerManagement.Entities.Company", b =>
+                {
+                    b.Navigation("Contacts");
+                });
 
-                    b.Navigation("Quota")
-                        .IsRequired();
+            modelBuilder.Entity("Lama.Domain.PipelineManagement.Entities.Pipeline", b =>
+                {
+                    b.Navigation("Stages");
                 });
 #pragma warning restore 612, 618
         }

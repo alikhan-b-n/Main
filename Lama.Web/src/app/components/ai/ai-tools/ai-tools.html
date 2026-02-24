@@ -1,0 +1,24 @@
+<div class="ai-tools">
+  <h2>AI Tools</h2>
+
+  <div class="form-row">
+    <label for="activityId">Activity ID (GUID)</label>
+    <input id="activityId" [(ngModel)]="activityId" placeholder="11111111-1111-1111-1111-111111111111" />
+  </div>
+
+  <div class="actions">
+    <button (click)="summarize()" [disabled]="loading">{{ loading ? 'Summarizing...' : 'Summarize Activity' }}</button>
+  </div>
+
+  <div class="result" *ngIf="result">
+    <h3>Summary</h3>
+    <p>{{ result.summary }}</p>
+    <h4>Metadata</h4>
+    <pre>{{ result.aiMetadata }}</pre>
+  </div>
+
+  <div class="error" *ngIf="error">
+    <p class="text-danger">{{ error }}</p>
+  </div>
+</div>
+

@@ -1,0 +1,13 @@
+.toast {
+  min-width: 300px;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.toast-header {
+  border-bottom: none;
+}
+
+.toast-body {
+  word-wrap: break-word;
+}

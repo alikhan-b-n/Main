@@ -1,0 +1,51 @@
+.sidenav-container {
+  height: 100vh;
+}
+
+.sidenav {
+  width: 250px;
+}
+
+.sidenav mat-toolbar {
+  padding: 16px;
+}
+
+.sidenav mat-nav-list a {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sidenav mat-nav-list a.active {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.content {
+  padding: 24px;
+}
+
+.content h1 {
+  margin-bottom: 32px;
+}
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+mat-card {
+  mat-card-header {
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+  }
+
+  mat-card-actions {
+    padding: 16px;
+    display: flex;
+    gap: 8px;
+  }
+}

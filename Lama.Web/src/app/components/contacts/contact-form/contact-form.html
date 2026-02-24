@@ -1,0 +1,125 @@
+<div class="container-fluid">
+  <div class="row mb-4">
+    <div class="col">
+      <h2>
+        <i class="bi bi-people"></i>
+        Create New Contact
+      </h2>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8 col-xl-6">
+      <div class="card">
+        <div class="card-body">
+          <form [formGroup]="contactForm" (ngSubmit)="onSubmit()">
+            <!-- First Name -->
+            <div class="mb-3">
+              <label for="firstName" class="form-label">
+                First Name <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                [class.is-invalid]="isFieldInvalid('firstName')"
+                id="firstName"
+                formControlName="firstName"
+                placeholder="Enter first name"
+              />
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('firstName')">
+                {{ getFieldError('firstName') }}
+              </div>
+            </div>
+
+            <!-- Last Name -->
+            <div class="mb-3">
+              <label for="lastName" class="form-label">
+                Last Name <span class="text-danger">*</span>
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                [class.is-invalid]="isFieldInvalid('lastName')"
+                id="lastName"
+                formControlName="lastName"
+                placeholder="Enter last name"
+              />
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('lastName')">
+                {{ getFieldError('lastName') }}
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+              <label for="email" class="form-label">
+                Email <span class="text-danger">*</span>
+              </label>
+              <input
+                type="email"
+                class="form-control"
+                [class.is-invalid]="isFieldInvalid('email')"
+                id="email"
+                formControlName="email"
+                placeholder="email@example.com"
+              />
+              <div class="invalid-feedback" *ngIf="isFieldInvalid('email')">
+                {{ getFieldError('email') }}
+              </div>
+            </div>
+
+            <!-- Phone Number -->
+            <div class="mb-3">
+              <label for="phoneNumber" class="form-label">Phone Number</label>
+              <input
+                type="tel"
+                class="form-control"
+                id="phoneNumber"
+                formControlName="phoneNumber"
+                placeholder="+1 (555) 123-4567"
+              />
+            </div>
+
+            <!-- Job Title -->
+            <div class="mb-3">
+              <label for="jobTitle" class="form-label">Job Title</label>
+              <input
+                type="text"
+                class="form-control"
+                id="jobTitle"
+                formControlName="jobTitle"
+                placeholder="e.g., Sales Manager"
+              />
+            </div>
+
+            <!-- Form Actions -->
+            <div class="d-flex gap-2 justify-content-end">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="cancel()"
+                [disabled]="isSubmitting"
+              >
+                <i class="bi bi-x-circle me-1"></i>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="btn btn-success"
+                [disabled]="!contactForm.valid || isSubmitting"
+              >
+                <span *ngIf="!isSubmitting">
+                  <i class="bi bi-check-circle me-1"></i>
+                  Create Contact
+                </span>
+                <span *ngIf="isSubmitting">
+                  <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                  Creating...
+                </span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

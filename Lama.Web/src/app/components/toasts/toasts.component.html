@@ -1,0 +1,21 @@
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 11">
+  <div *ngFor="let toast of toasts"
+       class="toast show"
+       [ngClass]="getToastClass(toast.type)"
+       role="alert"
+       aria-live="assertive"
+       aria-atomic="true">
+    <div class="toast-header" [ngClass]="getToastClass(toast.type)">
+      <i class="bi me-2" [ngClass]="getIcon(toast.type)"></i>
+      <strong class="me-auto">{{ toast.type | titlecase }}</strong>
+      <button type="button"
+              class="btn-close"
+              [ngClass]="{'btn-close-white': toast.type !== 'warning'}"
+              (click)="remove(toast.id)"
+              aria-label="Close"></button>
+    </div>
+    <div class="toast-body">
+      {{ toast.message }}
+    </div>
+  </div>
+</div>
