@@ -1,7 +1,6 @@
 using System.Reflection;
 using FluentValidation;
 using Lama.Application.Common.Behaviors;
-using Lama.Integrations.AI.Commands;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,11 +10,12 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
-        // Register MediatR and automatically discover all handlers in this assembly and AI integration assembly
+        // Register MediatR and automatically discover all handlers in this assembly
+        // Business logic (commands/queries/handlers) live here
+        // Integration.AI is just an API client library with interfaces and implementations
         services.AddMediatR(cfg =>
         {
             cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
-            cfg.RegisterServicesFromAssemblyContaining<SummarizeActivityCommand>();
 
             // Register pipeline behaviors in order of execution
             cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));

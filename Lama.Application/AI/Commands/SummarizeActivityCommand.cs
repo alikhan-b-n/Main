@@ -1,17 +1,25 @@
+using Lama.Application.Common;
+using Lama.Application.AI.Queries;
+using Lama.Domain.ActivityManagement.Entities;
 using Lama.Integrations.AI.Interfaces;
-using Lama.Integrations.AI.Queries;
 using MediatR;
 
-namespace Lama.Integrations.AI.Commands;
+namespace Lama.Application.AI.Commands;
 
+/// <summary>
+/// Command to summarize an activity using AI.
+/// This is business logic - orchestrates the use of AI service and repository.
+/// </summary>
 public record SummarizeActivityCommand(Guid ActivityId) : IRequest<ActivitySummaryDto>;
 
 public class SummarizeActivityCommandHandler : IRequestHandler<SummarizeActivityCommand, ActivitySummaryDto>
 {
-    private readonly IActivityRepository _activityRepository;
+    private readonly IRepository<Activity> _activityRepository;
     private readonly ITextAiService _textAiService;
 
-    public SummarizeActivityCommandHandler(IActivityRepository activityRepository, ITextAiService textAiService)
+    public SummarizeActivityCommandHandler(
+        IRepository<Activity> activityRepository,
+        ITextAiService textAiService)
     {
         _activityRepository = activityRepository;
         _textAiService = textAiService;
@@ -19,19 +27,21 @@ public class SummarizeActivityCommandHandler : IRequestHandler<SummarizeActivity
 
     public async Task<ActivitySummaryDto> Handle(SummarizeActivityCommand command, CancellationToken cancellationToken)
     {
+        // Business logic: Load activity
         var activity = await _activityRepository.GetByIdAsync(command.ActivityId, cancellationToken);
         if (activity == null)
             throw new KeyNotFoundException($"Activity with id {command.ActivityId} not found");
 
+        // Use AI service (integration) to generate summary
         var summary = await _textAiService.SummarizeAsync(activity.Subject, activity.Body, cancellationToken);
 
-        // AiMetadata can include model info; for local summarizer we set a simple metadata JSON
+        // Business logic: Update activity with AI-generated summary
         var aiMetadata = System.Text.Json.JsonSerializer.Serialize(new { Provider = "local", Model = "heuristic-1" });
-
         activity.UpdateSummary(summary, aiMetadata);
 
         await _activityRepository.UpdateAsync(activity, cancellationToken);
 
+        // Return application DTO
         return new ActivitySummaryDto(activity.Id, summary, aiMetadata);
     }
 }

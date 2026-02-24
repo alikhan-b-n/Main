@@ -17,7 +17,6 @@
     <ItemGroup>
       <ProjectReference Include="..\Lama.Application\Lama.Application.csproj" />
       <ProjectReference Include="..\Lama.Infrastructure\Lama.Infrastructure.csproj" />
-      <ProjectReference Include="..\Integrations\Lama.Integrations.AI\Lama.Integrations.AI.csproj" />
     </ItemGroup>
 
 </Project>

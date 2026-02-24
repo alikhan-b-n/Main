@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using Lama.Integrations.AI.Commands;
-using Lama.Integrations.AI.Queries;
+using Lama.Application.AI.Commands;
+using Lama.Application.AI.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 

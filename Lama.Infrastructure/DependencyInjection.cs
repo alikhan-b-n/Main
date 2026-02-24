@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using Lama.Integrations.AI.Configuration;
 using Lama.Integrations.AI.Interfaces;
 using Lama.Integrations.AI.Services;
-using Lama.Infrastructure.AI;
 
 namespace Lama.Infrastructure;
 
@@ -29,11 +29,16 @@ public static class DependencyInjection
         // Register repositories as scoped for EF Core
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
 
-        // Register AI text service (local fallback)
-        services.AddScoped<ITextAiService, LocalTextAiService>();
+        // Configure AI Integration
+        // Ollama settings from appsettings.json
+        services.Configure<OllamaSettings>(configuration.GetSection(OllamaSettings.SectionName));
 
-        // Register AI activity repository adapter
-        services.AddScoped<IActivityRepository, ActivityRepositoryAdapter>();
+        // Register HttpClient for Ollama with typed client
+        services.AddHttpClient<ITextAiService, OllamaTextAiService>();
+
+        // Note: OllamaTextAiService is an AI client library
+        // Business logic (commands/queries/handlers) are in Application layer
+        // Falls back to simple heuristic if Ollama is not running
 
         return services;
     }
