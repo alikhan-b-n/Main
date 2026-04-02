@@ -8,23 +8,36 @@ using Microsoft.AspNetCore.Mvc;
 namespace Lama.Api.Controllers;
 
 [ApiController]
-[Route("crm/objects/tickets")]
+[Route("api/support-cases")]
 public class TicketsController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly IRepository<Ticket> _ticketRepository;
 
-    public TicketsController(
-        IMediator mediator,
-        IRepository<Ticket> ticketRepository)
+    public TicketsController(IMediator mediator, IRepository<Ticket> ticketRepository)
     {
         _mediator = mediator;
         _ticketRepository = ticketRepository;
     }
 
     [HttpPost]
-    public async Task<ActionResult<Guid>> CreateTicket([FromBody] CreateTicketCommand command)
+    public async Task<ActionResult<Guid>> CreateTicket([FromBody] CreateSupportCaseRequest request)
     {
+        if (!Enum.TryParse<TicketPriority>(request.Priority, ignoreCase: true, out var priority))
+            return BadRequest(new { message = $"Invalid priority: {request.Priority}" });
+
+        if (!Enum.TryParse<TicketSource>(request.Source, ignoreCase: true, out var source))
+            return BadRequest(new { message = $"Invalid source: {request.Source}" });
+
+        var command = new CreateTicketCommand(
+            request.TicketName,
+            request.Description,
+            request.ContactId,
+            priority,
+            source,
+            request.CompanyId
+        );
+
         var ticketId = await _mediator.Send(command);
         return CreatedAtAction(nameof(GetTicket), new { id = ticketId }, ticketId);
     }
@@ -41,7 +54,7 @@ public class TicketsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TicketDto>>> GetAllTickets()
+    public async Task<ActionResult<IEnumerable<SupportCaseDto>>> GetAllTickets()
     {
         var query = new GetAllTicketsQuery();
         var tickets = await _mediator.Send(query);
@@ -67,3 +80,13 @@ public class TicketsController : ControllerBase
         return NoContent();
     }
 }
+
+public record CreateSupportCaseRequest(
+    string TicketName,
+    string Description,
+    Guid ContactId,
+    string Priority,
+    string Source,
+    Guid? CompanyId = null,
+    Guid? OwnerId = null
+);

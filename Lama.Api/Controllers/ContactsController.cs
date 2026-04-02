@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Lama.Api.Controllers;
 
 [ApiController]
-[Route("crm/objects/contacts")]
+[Route("api/contacts")]
 public class ContactsController : ControllerBase
 {
     private readonly IMediator _mediator;

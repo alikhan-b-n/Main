@@ -26,10 +26,7 @@ public class GetAllContactsQueryHandler : IQueryHandler<GetAllContactsQuery, IEn
             c.PhoneNumber?.Value,
             c.JobTitle,
             c.CompanyId,
-            c.OwnerId,
-            c.LifecycleStage,
-            c.CreatedAt,
-            c.LastActivityAt
+            c.CreatedAt
         ));
     }
 }
@@ -41,9 +38,6 @@ public record ContactDto(
     string Email,
     string? PhoneNumber,
     string? JobTitle,
-    Guid? CompanyId,
-    Guid? OwnerId,
-    string? LifecycleStage,
-    DateTime CreatedAt,
-    DateTime LastActivityAt
+    Guid? AccountId,
+    DateTime CreatedAt
 );

@@ -3,9 +3,9 @@ using Lama.Domain.CustomerService.Entities;
 
 namespace Lama.Application.TicketManagement.Queries;
 
-public record GetAllTicketsQuery : IQuery<IEnumerable<TicketDto>>;
+public record GetAllTicketsQuery : IQuery<IEnumerable<SupportCaseDto>>;
 
-public class GetAllTicketsQueryHandler : IQueryHandler<GetAllTicketsQuery, IEnumerable<TicketDto>>
+public class GetAllTicketsQueryHandler : IQueryHandler<GetAllTicketsQuery, IEnumerable<SupportCaseDto>>
 {
     private readonly IRepository<Ticket> _ticketRepository;
 
@@ -14,40 +14,43 @@ public class GetAllTicketsQueryHandler : IQueryHandler<GetAllTicketsQuery, IEnum
         _ticketRepository = ticketRepository;
     }
 
-    public async Task<IEnumerable<TicketDto>> Handle(GetAllTicketsQuery query, CancellationToken cancellationToken)
+    public async Task<IEnumerable<SupportCaseDto>> Handle(GetAllTicketsQuery query, CancellationToken cancellationToken)
     {
         var tickets = await _ticketRepository.GetAllAsync(cancellationToken);
 
-        return tickets.Select(t => new TicketDto(
+        return tickets.Select(t => new SupportCaseDto(
             t.Id,
             t.TicketName,
             t.Description,
-            t.Status.ToString(),
-            t.Priority.ToString(),
-            t.Source.ToString(),
-            t.ContactId,
+            MapPriority(t.Priority),
+            MapStatus(t.Status),
             t.CompanyId,
-            t.PipelineId,
-            t.StageId,
-            t.OwnerId,
-            t.CreatedAt,
-            t.ClosedAt
+            t.ContactId,
+            t.CreatedAt
         ));
     }
+
+    private static string MapPriority(TicketPriority priority) => priority switch
+    {
+        TicketPriority.Urgent => "Critical",
+        _ => priority.ToString()
+    };
+
+    private static string MapStatus(TicketStatus status) => status switch
+    {
+        TicketStatus.Waiting => "InProgress",
+        TicketStatus.Cancelled => "Closed",
+        _ => status.ToString()
+    };
 }
 
-public record TicketDto(
+public record SupportCaseDto(
     Guid Id,
-    string TicketName,
+    string Title,
     string Description,
-    string Status,
     string Priority,
-    string Source,
+    string Status,
+    Guid? AccountId,
     Guid ContactId,
-    Guid? CompanyId,
-    Guid PipelineId,
-    Guid StageId,
-    Guid? OwnerId,
-    DateTime CreatedAt,
-    DateTime? ClosedAt
+    DateTime CreatedAt
 );

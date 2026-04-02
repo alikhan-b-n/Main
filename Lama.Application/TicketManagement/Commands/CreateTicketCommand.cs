@@ -9,8 +9,6 @@ public record CreateTicketCommand(
     Guid ContactId,
     TicketPriority Priority,
     TicketSource Source,
-    Guid PipelineId,
-    Guid StageId,
     Guid? CompanyId = null,
     Guid? OwnerId = null
 ) : ICommand<Guid>;
@@ -18,33 +16,33 @@ public record CreateTicketCommand(
 public class CreateTicketCommandHandler : ICommandHandler<CreateTicketCommand, Guid>
 {
     private readonly IRepository<Ticket> _ticketRepository;
+    private readonly ITicketPipelineResolver _pipelineResolver;
 
-    public CreateTicketCommandHandler(IRepository<Ticket> ticketRepository)
+    public CreateTicketCommandHandler(IRepository<Ticket> ticketRepository, ITicketPipelineResolver pipelineResolver)
     {
         _ticketRepository = ticketRepository;
+        _pipelineResolver = pipelineResolver;
     }
 
     public async Task<Guid> Handle(CreateTicketCommand command, CancellationToken cancellationToken = default)
     {
+        var (pipelineId, stageId) = await _pipelineResolver.ResolveDefaultAsync(cancellationToken);
+
         var ticket = Ticket.Create(
             command.TicketName,
             command.Description,
             command.ContactId,
             command.Priority,
             command.Source,
-            command.PipelineId,
-            command.StageId
+            pipelineId,
+            stageId
         );
 
         if (command.CompanyId.HasValue)
-        {
             ticket.AssignToCompany(command.CompanyId.Value);
-        }
 
         if (command.OwnerId.HasValue)
-        {
             ticket.AssignToOwner(command.OwnerId.Value);
-        }
 
         await _ticketRepository.AddAsync(ticket, cancellationToken);
 

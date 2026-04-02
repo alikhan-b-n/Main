@@ -18,12 +18,6 @@ public class CreateTicketCommandValidator : AbstractValidator<CreateTicketComman
         RuleFor(x => x.ContactId)
             .NotEmpty().WithMessage("Contact is required");
 
-        RuleFor(x => x.PipelineId)
-            .NotEmpty().WithMessage("Pipeline is required");
-
-        RuleFor(x => x.StageId)
-            .NotEmpty().WithMessage("Stage is required");
-
         RuleFor(x => x.Priority)
             .IsInEnum().WithMessage("Invalid priority");
 

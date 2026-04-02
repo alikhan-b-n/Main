@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Lama.Api.Controllers;
 
 [ApiController]
-[Route("crm/objects/companies")]
+[Route("api/accounts")]
 public class CompaniesController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -35,7 +35,7 @@ public class CompaniesController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<CompanyDto>> GetCompany(Guid id)
+    public async Task<ActionResult<AccountDto>> GetCompany(Guid id)
     {
         var query = new GetCompanyByIdQuery(id);
         var company = await _mediator.Send(query);
@@ -43,16 +43,32 @@ public class CompaniesController : ControllerBase
         if (company == null)
             return NotFound();
 
-        return Ok(company);
+        var categoryName = company.ClientCategoryId.HasValue
+            ? (await _dbContext.ClientCategories.FindAsync(company.ClientCategoryId.Value))?.Name ?? "Prospect"
+            : "Prospect";
+
+        return Ok(new AccountDto(company.Id, company.Name, company.Industry, company.Website, categoryName, company.CreatedAt));
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<CompanyDto>>> GetAllCompanies()
+    public async Task<ActionResult<IEnumerable<AccountDto>>> GetAllCompanies()
     {
         var query = new GetAllCompaniesQuery();
         var companies = await _mediator.Send(query);
 
-        return Ok(companies);
+        var categories = await _dbContext.ClientCategories
+            .ToDictionaryAsync(c => c.Id, c => c.Name);
+
+        var result = companies.Select(c => new AccountDto(
+            c.Id,
+            c.Name,
+            c.Industry,
+            c.Website,
+            c.ClientCategoryId.HasValue && categories.TryGetValue(c.ClientCategoryId.Value, out var name) ? name : "Prospect",
+            c.CreatedAt
+        ));
+
+        return Ok(result);
     }
 
     [HttpPut("{id}")]
@@ -88,3 +104,12 @@ public class CompaniesController : ControllerBase
         return NoContent();
     }
 }
+
+public record AccountDto(
+    Guid Id,
+    string Name,
+    string? Industry,
+    string? Website,
+    string Type,
+    DateTime CreatedAt
+);
