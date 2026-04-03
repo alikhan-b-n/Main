@@ -3,7 +3,6 @@ using Lama.Domain.CustomerService.Entities;
 using Lama.Domain.SalesManagement.Entities;
 using Lama.Domain.ActivityManagement.Entities;
 using Lama.Domain.UserManagement.Entities;
-using Lama.Domain.PipelineManagement.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lama.Infrastructure.Persistence;
@@ -28,10 +27,6 @@ public class ApplicationDbContext : DbContext
     // Activity & User Management
     public DbSet<Activity> Activities => Set<Activity>();
     public DbSet<Employee> Employees => Set<Employee>();
-
-    // Pipeline Management
-    public DbSet<Pipeline> Pipelines => Set<Pipeline>();
-    public DbSet<Stage> Stages => Set<Stage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

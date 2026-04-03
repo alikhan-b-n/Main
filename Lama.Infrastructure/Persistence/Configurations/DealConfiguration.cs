@@ -30,12 +30,6 @@ public class DealConfiguration : IEntityTypeConfiguration<Deal>
         builder.Property(d => d.CompanyId)
             .IsRequired();
 
-        builder.Property(d => d.PipelineId)
-            .IsRequired();
-
-        builder.Property(d => d.StageId)
-            .IsRequired();
-
         builder.Property(d => d.CreatedAt)
             .IsRequired();
 
@@ -44,7 +38,5 @@ public class DealConfiguration : IEntityTypeConfiguration<Deal>
         builder.HasIndex(d => d.CompanyId);
         builder.HasIndex(d => d.ContactId);
         builder.HasIndex(d => d.OwnerId);
-        builder.HasIndex(d => d.PipelineId);
-        builder.HasIndex(d => d.StageId);
     }
 }

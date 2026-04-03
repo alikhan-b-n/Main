@@ -9,7 +9,6 @@ public record UpdateTicketCommand(
     string Description,
     TicketPriority Priority,
     Guid? OwnerId = null,
-    Guid? StageId = null,
     Guid? CompanyId = null
 ) : ICommand;
 
@@ -33,11 +32,6 @@ public class UpdateTicketCommandHandler : ICommandHandler<UpdateTicketCommand>
         if (command.OwnerId.HasValue)
         {
             ticket.AssignToOwner(command.OwnerId.Value);
-        }
-
-        if (command.StageId.HasValue)
-        {
-            ticket.MoveToStage(command.StageId.Value);
         }
 
         if (command.CompanyId.HasValue)

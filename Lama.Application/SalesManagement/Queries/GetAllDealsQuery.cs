@@ -29,9 +29,8 @@ public class GetAllDealsQueryHandler : IQueryHandler<GetAllDealsQuery, IEnumerab
             d.Probability,
             d.ExpectedCloseDate,
             d.ActualCloseDate,
-            d.PipelineId,
-            d.StageId,
             d.OwnerId,
+            d.Status.ToString(),
             d.CreatedAt
         ));
     }
@@ -48,8 +47,7 @@ public record DealDto(
     int Probability,
     DateTime ExpectedCloseDate,
     DateTime? ActualCloseDate,
-    Guid PipelineId,
-    Guid StageId,
     Guid? OwnerId,
+    string Status,
     DateTime CreatedAt
 );

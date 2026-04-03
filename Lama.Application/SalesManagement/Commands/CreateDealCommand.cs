@@ -8,8 +8,6 @@ public record CreateDealCommand(
     Guid CompanyId,
     decimal Amount,
     DateTime ExpectedCloseDate,
-    Guid PipelineId,
-    Guid StageId,
     string Currency = "USD",
     Guid? ContactId = null,
     string? Description = null,
@@ -32,8 +30,6 @@ public class CreateDealCommandHandler : ICommandHandler<CreateDealCommand, Guid>
             command.CompanyId,
             command.Amount,
             command.ExpectedCloseDate,
-            command.PipelineId,
-            command.StageId,
             command.Currency
         );
 
@@ -48,14 +44,10 @@ public class CreateDealCommandHandler : ICommandHandler<CreateDealCommand, Guid>
         }
 
         if (command.ContactId.HasValue)
-        {
             deal.AssignContact(command.ContactId.Value);
-        }
 
         if (command.OwnerId.HasValue)
-        {
             deal.AssignOwner(command.OwnerId.Value);
-        }
 
         await _dealRepository.AddAsync(deal, cancellationToken);
 

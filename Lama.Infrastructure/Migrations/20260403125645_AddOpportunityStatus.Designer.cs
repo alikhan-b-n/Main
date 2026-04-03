@@ -3,6 +3,7 @@ using System;
 using Lama.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Lama.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260403125645_AddOpportunityStatus")]
+    partial class AddOpportunityStatus
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -239,6 +242,9 @@ namespace Lama.Infrastructure.Migrations
                     b.Property<Guid?>("OwnerId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("PipelineId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Priority")
                         .IsRequired()
                         .HasColumnType("text");
@@ -246,6 +252,9 @@ namespace Lama.Infrastructure.Migrations
                     b.Property<string>("Source")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<Guid>("StageId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -267,9 +276,78 @@ namespace Lama.Infrastructure.Migrations
 
                     b.HasIndex("OwnerId");
 
+                    b.HasIndex("PipelineId");
+
+                    b.HasIndex("StageId");
+
                     b.HasIndex("Status");
 
                     b.ToTable("Tickets", (string)null);
+                });
+
+            modelBuilder.Entity("Lama.Domain.PipelineManagement.Entities.Pipeline", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Pipelines");
+                });
+
+            modelBuilder.Entity("Lama.Domain.PipelineManagement.Entities.Stage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("IsClosed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("PipelineId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("Probability")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PipelineId");
+
+                    b.ToTable("Stages");
                 });
 
             modelBuilder.Entity("Lama.Domain.SalesManagement.Entities.Deal", b =>
@@ -305,8 +383,14 @@ namespace Lama.Infrastructure.Migrations
                     b.Property<Guid?>("OwnerId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid>("PipelineId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Probability")
                         .HasColumnType("integer");
+
+                    b.Property<Guid>("StageId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -321,6 +405,10 @@ namespace Lama.Infrastructure.Migrations
                     b.HasIndex("ContactId");
 
                     b.HasIndex("OwnerId");
+
+                    b.HasIndex("PipelineId");
+
+                    b.HasIndex("StageId");
 
                     b.ToTable("Deals", (string)null);
                 });
@@ -502,6 +590,15 @@ namespace Lama.Infrastructure.Migrations
                     b.Navigation("PhoneNumber");
                 });
 
+            modelBuilder.Entity("Lama.Domain.PipelineManagement.Entities.Stage", b =>
+                {
+                    b.HasOne("Lama.Domain.PipelineManagement.Entities.Pipeline", null)
+                        .WithMany("Stages")
+                        .HasForeignKey("PipelineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Lama.Domain.SalesManagement.Entities.Deal", b =>
                 {
                     b.OwnsOne("Lama.Domain.SalesManagement.ValueObjects.Money", "Amount", b1 =>
@@ -535,6 +632,11 @@ namespace Lama.Infrastructure.Migrations
             modelBuilder.Entity("Lama.Domain.CustomerManagement.Entities.Company", b =>
                 {
                     b.Navigation("Contacts");
+                });
+
+            modelBuilder.Entity("Lama.Domain.PipelineManagement.Entities.Pipeline", b =>
+                {
+                    b.Navigation("Stages");
                 });
 #pragma warning restore 612, 618
         }

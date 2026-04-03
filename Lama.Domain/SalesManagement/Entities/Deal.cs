@@ -13,37 +13,31 @@ public class Deal : AggregateRoot
     public int Probability { get; private set; }
     public DateTime ExpectedCloseDate { get; private set; }
     public DateTime? ActualCloseDate { get; private set; }
-    public Guid PipelineId { get; private set; }
-    public Guid StageId { get; private set; }
     public Guid? OwnerId { get; private set; }
+    public OpportunityStatus Status { get; private set; }
 
     private Deal() { }
 
-    private Deal(string name, Guid companyId, Money amount, DateTime expectedCloseDate, Guid pipelineId, Guid stageId)
+    private Deal(string name, Guid companyId, Money amount, DateTime expectedCloseDate)
     {
         Name = name;
         CompanyId = companyId;
         Amount = amount;
         ExpectedCloseDate = expectedCloseDate;
-        PipelineId = pipelineId;
-        StageId = stageId;
         Probability = 10; // Default probability
+        Status = OpportunityStatus.Relevant;
     }
 
-    public static Deal Create(string name, Guid companyId, decimal amount, DateTime expectedCloseDate, Guid pipelineId, Guid stageId, string currency = "USD")
+    public static Deal Create(string name, Guid companyId, decimal amount, DateTime expectedCloseDate, string currency = "USD")
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Deal name cannot be empty", nameof(name));
         if (companyId == Guid.Empty)
             throw new ArgumentException("Company ID cannot be empty", nameof(companyId));
-        if (pipelineId == Guid.Empty)
-            throw new ArgumentException("Pipeline ID cannot be empty", nameof(pipelineId));
-        if (stageId == Guid.Empty)
-            throw new ArgumentException("Stage ID cannot be empty", nameof(stageId));
-        if (expectedCloseDate < DateTime.UtcNow)
-            throw new ArgumentException("Expected close date must be in the future", nameof(expectedCloseDate));
+        if (expectedCloseDate.Date < DateTime.UtcNow.Date)
+            throw new ArgumentException("Expected close date must be today or in the future", nameof(expectedCloseDate));
 
-        return new Deal(name, companyId, Money.Create(amount, currency), expectedCloseDate, pipelineId, stageId);
+        return new Deal(name, companyId, Money.Create(amount, currency), expectedCloseDate);
     }
 
     public void UpdateDealInfo(string name, string? description, decimal amount, DateTime expectedCloseDate)
@@ -55,13 +49,6 @@ public class Deal : AggregateRoot
         Description = description;
         Amount = Money.Create(amount, Amount.Currency);
         ExpectedCloseDate = expectedCloseDate;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void MoveToStage(Guid newStageId, int stageProbability)
-    {
-        StageId = newStageId;
-        Probability = stageProbability;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -77,13 +64,6 @@ public class Deal : AggregateRoot
         Probability = 0;
         Description = $"{Description}\n\nLost Reason: {reason}";
         ActualCloseDate = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void AssignToPipeline(Guid pipelineId, Guid initialStageId)
-    {
-        PipelineId = pipelineId;
-        StageId = initialStageId;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -107,4 +87,17 @@ public class Deal : AggregateRoot
         Probability = probability;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void UpdateStatus(OpportunityStatus status)
+    {
+        Status = status;
+        UpdatedAt = DateTime.UtcNow;
+    }
+}
+
+public enum OpportunityStatus
+{
+    Relevant,
+    RealizedRevenue,
+    NotRelevant
 }

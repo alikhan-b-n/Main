@@ -16,26 +16,20 @@ public record CreateTicketCommand(
 public class CreateTicketCommandHandler : ICommandHandler<CreateTicketCommand, Guid>
 {
     private readonly IRepository<Ticket> _ticketRepository;
-    private readonly ITicketPipelineResolver _pipelineResolver;
 
-    public CreateTicketCommandHandler(IRepository<Ticket> ticketRepository, ITicketPipelineResolver pipelineResolver)
+    public CreateTicketCommandHandler(IRepository<Ticket> ticketRepository)
     {
         _ticketRepository = ticketRepository;
-        _pipelineResolver = pipelineResolver;
     }
 
     public async Task<Guid> Handle(CreateTicketCommand command, CancellationToken cancellationToken = default)
     {
-        var (pipelineId, stageId) = await _pipelineResolver.ResolveDefaultAsync(cancellationToken);
-
         var ticket = Ticket.Create(
             command.TicketName,
             command.Description,
             command.ContactId,
             command.Priority,
-            command.Source,
-            pipelineId,
-            stageId
+            command.Source
         );
 
         if (command.CompanyId.HasValue)

@@ -11,7 +11,6 @@ public record UpdateDealCommand(
     DateTime? ExpectedCloseDate = null,
     Guid? ContactId = null,
     Guid? OwnerId = null,
-    Guid? StageId = null,
     int? Probability = null
 ) : ICommand;
 
@@ -50,11 +49,7 @@ public class UpdateDealCommandHandler : ICommandHandler<UpdateDealCommand>
             deal.AssignOwner(command.OwnerId.Value);
         }
 
-        if (command.StageId.HasValue && command.Probability.HasValue)
-        {
-            deal.MoveToStage(command.StageId.Value, command.Probability.Value);
-        }
-        else if (command.Probability.HasValue)
+        if (command.Probability.HasValue)
         {
             deal.UpdateProbability(command.Probability.Value);
         }

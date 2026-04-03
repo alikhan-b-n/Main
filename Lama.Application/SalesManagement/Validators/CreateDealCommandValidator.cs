@@ -14,17 +14,11 @@ public class CreateDealCommandValidator : AbstractValidator<CreateDealCommand>
         RuleFor(x => x.CompanyId)
             .NotEmpty().WithMessage("Company is required");
 
-        RuleFor(x => x.PipelineId)
-            .NotEmpty().WithMessage("Pipeline is required");
-
-        RuleFor(x => x.StageId)
-            .NotEmpty().WithMessage("Stage is required");
-
         RuleFor(x => x.Amount)
             .GreaterThanOrEqualTo(0).WithMessage("Amount must be non-negative");
 
         RuleFor(x => x.ExpectedCloseDate)
-            .GreaterThan(DateTime.UtcNow).WithMessage("Expected close date must be in the future");
+            .GreaterThanOrEqualTo(DateTime.UtcNow.Date).WithMessage("Expected close date must be today or in the future");
 
         RuleFor(x => x.Currency)
             .NotEmpty().WithMessage("Currency is required")
