@@ -2,10 +2,8 @@ using Lama.Application.Common;
 using Lama.Application.CustomerManagement.Commands;
 using Lama.Application.CustomerManagement.Queries;
 using Lama.Domain.CustomerManagement.Entities;
-using Lama.Infrastructure.Persistence;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Lama.Api.Controllers;
 
@@ -15,16 +13,13 @@ public class CompaniesController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly IRepository<Company> _companyRepository;
-    private readonly ApplicationDbContext _dbContext;
 
     public CompaniesController(
         IMediator mediator,
-        IRepository<Company> companyRepository,
-        ApplicationDbContext dbContext)
+        IRepository<Company> companyRepository)
     {
         _mediator = mediator;
         _companyRepository = companyRepository;
-        _dbContext = dbContext;
     }
 
     [HttpPost]
@@ -43,11 +38,7 @@ public class CompaniesController : ControllerBase
         if (company == null)
             return NotFound();
 
-        var categoryName = company.ClientCategoryId.HasValue
-            ? (await _dbContext.ClientCategories.FindAsync(company.ClientCategoryId.Value))?.Name ?? "Prospect"
-            : "Prospect";
-
-        return Ok(new AccountDto(company.Id, company.Name, company.Industry, company.Website, categoryName, company.CreatedAt));
+        return Ok(new AccountDto(company.Id, company.Name, company.Industry, company.Website, company.CreatedAt));
     }
 
     [HttpGet]
@@ -55,19 +46,7 @@ public class CompaniesController : ControllerBase
     {
         var query = new GetAllCompaniesQuery();
         var companies = await _mediator.Send(query);
-
-        var categories = await _dbContext.ClientCategories
-            .ToDictionaryAsync(c => c.Id, c => c.Name);
-
-        var result = companies.Select(c => new AccountDto(
-            c.Id,
-            c.Name,
-            c.Industry,
-            c.Website,
-            c.ClientCategoryId.HasValue && categories.TryGetValue(c.ClientCategoryId.Value, out var name) ? name : "Prospect",
-            c.CreatedAt
-        ));
-
+        var result = companies.Select(c => new AccountDto(c.Id, c.Name, c.Industry, c.Website, c.CreatedAt));
         return Ok(result);
     }
 
@@ -88,28 +67,6 @@ public class CompaniesController : ControllerBase
         await _mediator.Send(command);
         return NoContent();
     }
-
-    [HttpPut("{companyId}/associations/client_categories/{categoryId}")]
-    public async Task<IActionResult> AssociateClientCategory(Guid companyId, Guid categoryId)
-    {
-        var company = await _companyRepository.GetByIdAsync(companyId);
-        if (company == null) return NotFound(new { message = "Company not found" });
-
-        var category = await _dbContext.ClientCategories.FindAsync(categoryId);
-        if (category == null) return NotFound(new { message = "Client category not found" });
-
-        company.AssignToCategory(categoryId);
-        await _companyRepository.UpdateAsync(company);
-
-        return NoContent();
-    }
 }
 
-public record AccountDto(
-    Guid Id,
-    string Name,
-    string? Industry,
-    string? Website,
-    string Type,
-    DateTime CreatedAt
-);
+public record AccountDto(Guid Id, string Name, string? Industry, string? Website, DateTime CreatedAt);

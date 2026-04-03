@@ -27,7 +27,6 @@ public class GetCompanyByIdQueryHandler : IQueryHandler<GetCompanyByIdQuery, Com
             company.Domain,
             company.Industry,
             company.Website,
-            company.ClientCategoryId,
             company.TotalSpent,
             company.CreatedAt,
             company.LastActivityAt

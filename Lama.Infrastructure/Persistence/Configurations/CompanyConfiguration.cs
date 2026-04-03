@@ -43,6 +43,5 @@ public class CompanyConfiguration : IEntityTypeConfiguration<Company>
 
         builder.HasIndex(c => c.Name);
         builder.HasIndex(c => c.Domain);
-        builder.HasIndex(c => c.ClientCategoryId);
     }
 }

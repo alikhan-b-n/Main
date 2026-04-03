@@ -9,7 +9,6 @@ public record UpdateCompanyCommand(
     string? Industry = null,
     string? Website = null,
     string? Domain = null,
-    Guid? ClientCategoryId = null,
     string? Email = null,
     string? PhoneNumber = null,
     string? Street = null,
@@ -46,11 +45,6 @@ public class UpdateCompanyCommandHandler : ICommandHandler<UpdateCompanyCommand>
             && !string.IsNullOrWhiteSpace(command.Country))
         {
             company.SetAddress(command.Street, command.City, command.State, command.PostalCode, command.Country);
-        }
-
-        if (command.ClientCategoryId.HasValue)
-        {
-            company.AssignToCategory(command.ClientCategoryId.Value);
         }
 
         await _companyRepository.UpdateAsync(company, cancellationToken);

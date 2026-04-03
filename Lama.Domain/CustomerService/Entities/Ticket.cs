@@ -9,33 +9,29 @@ public class Ticket : AggregateRoot
     public TicketStatus Status { get; private set; }
     public TicketPriority Priority { get; private set; }
     public TicketSource Source { get; private set; }
-    public Guid ContactId { get; private set; }
     public Guid? CompanyId { get; private set; }
     public Guid? OwnerId { get; private set; }
     public DateTime? ClosedAt { get; private set; }
 
     private Ticket() { }
 
-    private Ticket(string ticketName, string description, Guid contactId, TicketPriority priority, TicketSource source)
+    private Ticket(string ticketName, string description, TicketPriority priority, TicketSource source)
     {
         TicketName = ticketName;
         Description = description;
-        ContactId = contactId;
         Priority = priority;
         Source = source;
         Status = TicketStatus.Open;
     }
 
-    public static Ticket Create(string ticketName, string description, Guid contactId, TicketPriority priority, TicketSource source)
+    public static Ticket Create(string ticketName, string description, TicketPriority priority, TicketSource source, Guid? contactId = null)
     {
         if (string.IsNullOrWhiteSpace(ticketName))
             throw new ArgumentException("Ticket name cannot be empty", nameof(ticketName));
         if (string.IsNullOrWhiteSpace(description))
             throw new ArgumentException("Ticket description cannot be empty", nameof(description));
-        if (contactId == Guid.Empty)
-            throw new ArgumentException("Contact ID cannot be empty", nameof(contactId));
 
-        return new Ticket(ticketName, description, contactId, priority, source);
+        return new Ticket(ticketName, description, priority, source);
     }
 
     public void UpdateTicketInfo(string ticketName, string description, TicketPriority priority)
@@ -57,6 +53,20 @@ public class Ticket : AggregateRoot
             throw new ArgumentException("Owner ID cannot be empty", nameof(ownerId));
 
         OwnerId = ownerId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateStatus(TicketStatus status)
+    {
+        Status = status;
+        if (status == TicketStatus.Closed || status == TicketStatus.Cancelled)
+            ClosedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdatePriority(TicketPriority priority)
+    {
+        Priority = priority;
         UpdatedAt = DateTime.UtcNow;
     }
 

@@ -6,9 +6,9 @@ namespace Lama.Application.TicketManagement.Commands;
 public record CreateTicketCommand(
     string TicketName,
     string Description,
-    Guid ContactId,
     TicketPriority Priority,
     TicketSource Source,
+    Guid? ContactId = null,
     Guid? CompanyId = null,
     Guid? OwnerId = null
 ) : ICommand<Guid>;
@@ -27,9 +27,9 @@ public class CreateTicketCommandHandler : ICommandHandler<CreateTicketCommand, G
         var ticket = Ticket.Create(
             command.TicketName,
             command.Description,
-            command.ContactId,
             command.Priority,
-            command.Source
+            command.Source,
+            command.ContactId
         );
 
         if (command.CompanyId.HasValue)

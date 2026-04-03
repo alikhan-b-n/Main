@@ -15,9 +15,6 @@ public class CreateTicketCommandValidator : AbstractValidator<CreateTicketComman
             .NotEmpty().WithMessage("Description is required")
             .MaximumLength(2000).WithMessage("Description must not exceed 2000 characters");
 
-        RuleFor(x => x.ContactId)
-            .NotEmpty().WithMessage("Contact is required");
-
         RuleFor(x => x.Priority)
             .IsInEnum().WithMessage("Invalid priority");
 

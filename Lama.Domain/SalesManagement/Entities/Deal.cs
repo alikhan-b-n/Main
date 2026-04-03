@@ -10,7 +10,6 @@ public class Deal : AggregateRoot
     public Guid CompanyId { get; private set; }
     public Guid? ContactId { get; private set; }
     public Money Amount { get; private set; }
-    public int Probability { get; private set; }
     public DateTime ExpectedCloseDate { get; private set; }
     public DateTime? ActualCloseDate { get; private set; }
     public Guid? OwnerId { get; private set; }
@@ -24,7 +23,6 @@ public class Deal : AggregateRoot
         CompanyId = companyId;
         Amount = amount;
         ExpectedCloseDate = expectedCloseDate;
-        Probability = 10; // Default probability
         Status = OpportunityStatus.Relevant;
     }
 
@@ -54,14 +52,12 @@ public class Deal : AggregateRoot
 
     public void Win()
     {
-        Probability = 100;
         ActualCloseDate = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
 
     public void Lose(string reason)
     {
-        Probability = 0;
         Description = $"{Description}\n\nLost Reason: {reason}";
         ActualCloseDate = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
@@ -76,15 +72,6 @@ public class Deal : AggregateRoot
     public void AssignOwner(Guid ownerId)
     {
         OwnerId = ownerId;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void UpdateProbability(int probability)
-    {
-        if (probability < 0 || probability > 100)
-            throw new ArgumentException("Probability must be between 0 and 100", nameof(probability));
-
-        Probability = probability;
         UpdatedAt = DateTime.UtcNow;
     }
 

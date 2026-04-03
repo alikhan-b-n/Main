@@ -32,9 +32,9 @@ public class TicketsController : ControllerBase
         var command = new CreateTicketCommand(
             request.TicketName,
             request.Description,
-            request.ContactId,
             priority,
             source,
+            request.ContactId,
             request.CompanyId
         );
 
@@ -72,6 +72,48 @@ public class TicketsController : ControllerBase
         return NoContent();
     }
 
+    [HttpPatch("{id}/status")]
+    public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateCaseStatusRequest request)
+    {
+        if (!Enum.TryParse<TicketStatus>(request.Status, ignoreCase: true, out var status))
+            return BadRequest(new { message = $"Invalid status: {request.Status}" });
+
+        var ticket = await _ticketRepository.GetByIdAsync(id);
+        if (ticket == null) return NotFound();
+
+        ticket.UpdateStatus(status);
+        await _ticketRepository.UpdateAsync(ticket);
+        return NoContent();
+    }
+
+    [HttpPatch("{id}/priority")]
+    public async Task<IActionResult> UpdatePriority(Guid id, [FromBody] UpdateCasePriorityRequest request)
+    {
+        if (!Enum.TryParse<TicketPriority>(request.Priority, ignoreCase: true, out var priority))
+            return BadRequest(new { message = $"Invalid priority: {request.Priority}" });
+
+        var ticket = await _ticketRepository.GetByIdAsync(id);
+        if (ticket == null) return NotFound();
+
+        ticket.UpdatePriority(priority);
+        await _ticketRepository.UpdateAsync(ticket);
+        return NoContent();
+    }
+
+    [HttpPost("{id:guid}/summarize")]
+    public async Task<IActionResult> SummarizeTicket(Guid id)
+    {
+        try
+        {
+            var summary = await _mediator.Send(new SummarizeSupportCaseQuery(id));
+            return Ok(new { summary });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTicket(Guid id)
     {
@@ -84,9 +126,12 @@ public class TicketsController : ControllerBase
 public record CreateSupportCaseRequest(
     string TicketName,
     string Description,
-    Guid ContactId,
     string Priority,
     string Source,
+    Guid? ContactId = null,
     Guid? CompanyId = null,
     Guid? OwnerId = null
 );
+
+public record UpdateCaseStatusRequest(string Status);
+public record UpdateCasePriorityRequest(string Priority);

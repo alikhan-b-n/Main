@@ -19,9 +19,6 @@ public class DealConfiguration : IEntityTypeConfiguration<Deal>
         builder.Property(d => d.Description)
             .HasMaxLength(2000);
 
-        builder.Property(d => d.Probability)
-            .IsRequired();
-
         builder.Property(d => d.ExpectedCloseDate)
             .IsRequired();
 

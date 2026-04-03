@@ -12,7 +12,6 @@ public class Company : AggregateRoot
     public Email? Email { get; private set; }
     public PhoneNumber? PhoneNumber { get; private set; }
     public string? Website { get; private set; }
-    public Guid? ClientCategoryId { get; private set; }
     public decimal TotalSpent { get; private set; }
     public DateTime LastActivityAt { get; private set; }
 
@@ -68,12 +67,6 @@ public class Company : AggregateRoot
             throw new InvalidOperationException("Contact already exists in this company");
 
         _contacts.Add(contact);
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void AssignToCategory(Guid clientCategoryId)
-    {
-        ClientCategoryId = clientCategoryId;
         UpdatedAt = DateTime.UtcNow;
     }
 

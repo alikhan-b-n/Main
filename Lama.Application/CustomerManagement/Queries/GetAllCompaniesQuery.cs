@@ -24,7 +24,6 @@ public class GetAllCompaniesQueryHandler : IQueryHandler<GetAllCompaniesQuery, I
             c.Domain,
             c.Industry,
             c.Website,
-            c.ClientCategoryId,
             c.TotalSpent,
             c.CreatedAt,
             c.LastActivityAt
@@ -38,7 +37,6 @@ public record CompanyDto(
     string? Domain,
     string? Industry,
     string? Website,
-    Guid? ClientCategoryId,
     decimal TotalSpent,
     DateTime CreatedAt,
     DateTime LastActivityAt

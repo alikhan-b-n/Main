@@ -25,7 +25,6 @@ public class GetAllTicketsQueryHandler : IQueryHandler<GetAllTicketsQuery, IEnum
             MapPriority(t.Priority),
             MapStatus(t.Status),
             t.CompanyId,
-            t.ContactId,
             t.CreatedAt
         ));
     }
@@ -51,6 +50,5 @@ public record SupportCaseDto(
     string Priority,
     string Status,
     Guid? AccountId,
-    Guid ContactId,
     DateTime CreatedAt
 );

@@ -10,8 +10,7 @@ public record UpdateDealCommand(
     decimal? Amount = null,
     DateTime? ExpectedCloseDate = null,
     Guid? ContactId = null,
-    Guid? OwnerId = null,
-    int? Probability = null
+    Guid? OwnerId = null
 ) : ICommand;
 
 public class UpdateDealCommandHandler : ICommandHandler<UpdateDealCommand>
@@ -47,11 +46,6 @@ public class UpdateDealCommandHandler : ICommandHandler<UpdateDealCommand>
         if (command.OwnerId.HasValue)
         {
             deal.AssignOwner(command.OwnerId.Value);
-        }
-
-        if (command.Probability.HasValue)
-        {
-            deal.UpdateProbability(command.Probability.Value);
         }
 
         await _dealRepository.UpdateAsync(deal, cancellationToken);

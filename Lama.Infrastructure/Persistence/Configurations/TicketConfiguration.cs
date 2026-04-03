@@ -32,9 +32,6 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
             .IsRequired()
             .HasConversion<string>();
 
-        builder.Property(t => t.ContactId)
-            .IsRequired();
-
         builder.Property(t => t.CreatedAt)
             .IsRequired();
 
@@ -42,7 +39,6 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
 
         builder.Property(t => t.ClosedAt);
 
-        builder.HasIndex(t => t.ContactId);
         builder.HasIndex(t => t.CompanyId);
         builder.HasIndex(t => t.OwnerId);
         builder.HasIndex(t => t.Status);

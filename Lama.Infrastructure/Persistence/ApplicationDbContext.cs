@@ -16,7 +16,6 @@ public class ApplicationDbContext : DbContext
     // Customer Management (Core CRM)
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<Contact> Contacts => Set<Contact>();
-    public DbSet<ClientCategory> ClientCategories => Set<ClientCategory>();
 
     // Sales Management (Core CRM)
     public DbSet<Deal> Deals => Set<Deal>();

@@ -7,8 +7,7 @@ public record CreateCompanyCommand(
     string Name,
     string? Industry = null,
     string? Website = null,
-    string? Domain = null,
-    Guid? ClientCategoryId = null
+    string? Domain = null
 ) : ICommand<Guid>;
 
 public class CreateCompanyCommandHandler : ICommandHandler<CreateCompanyCommand, Guid>
@@ -27,11 +26,6 @@ public class CreateCompanyCommandHandler : ICommandHandler<CreateCompanyCommand,
         if (!string.IsNullOrWhiteSpace(command.Website) || !string.IsNullOrWhiteSpace(command.Domain))
         {
             company.UpdateCompanyInfo(command.Name, command.Industry, command.Website, command.Domain);
-        }
-
-        if (command.ClientCategoryId.HasValue)
-        {
-            company.AssignToCategory(command.ClientCategoryId.Value);
         }
 
         await _companyRepository.AddAsync(company, cancellationToken);
