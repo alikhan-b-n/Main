@@ -1,10 +1,14 @@
 using Lama.Application.Common;
 using Lama.Domain.CustomerService.Entities;
+using Lama.Integrations.AI.Configuration;
 using Lama.Integrations.AI.Interfaces;
 
 namespace Lama.Application.TicketManagement.Queries;
 
-public record SummarizeSupportCaseQuery(Guid TicketId) : IQuery<string>;
+public record SummarizeSupportCaseQuery(
+    Guid TicketId,
+    AiProviderOptions? ProviderOptions = null
+) : IQuery<string>;
 
 public class SummarizeSupportCaseQueryHandler : IQueryHandler<SummarizeSupportCaseQuery, string>
 {
@@ -25,7 +29,11 @@ public class SummarizeSupportCaseQueryHandler : IQueryHandler<SummarizeSupportCa
         if (ticket == null)
             throw new KeyNotFoundException($"Support case {query.TicketId} not found");
 
-        var summary = await _textAiService.SummarizeSupportCaseAsync(ticket.TicketName, ticket.Description, cancellationToken);
+        var summary = await _textAiService.SummarizeSupportCaseAsync(
+            ticket.TicketName,
+            ticket.Description,
+            query.ProviderOptions,
+            cancellationToken);
         return summary;
     }
 }

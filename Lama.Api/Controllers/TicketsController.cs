@@ -1,7 +1,9 @@
+using Lama.Api.AiRequests;
 using Lama.Application.Common;
 using Lama.Application.TicketManagement.Commands;
 using Lama.Application.TicketManagement.Queries;
 using Lama.Domain.CustomerService.Entities;
+using Lama.Integrations.AI.Exceptions;
 using Lama.Integrations.AI.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -15,12 +17,18 @@ public class TicketsController : ControllerBase
     private readonly IMediator _mediator;
     private readonly IRepository<Ticket> _ticketRepository;
     private readonly ITextAiService _aiService;
+    private readonly ILogger<TicketsController> _logger;
 
-    public TicketsController(IMediator mediator, IRepository<Ticket> ticketRepository, ITextAiService aiService)
+    public TicketsController(
+        IMediator mediator,
+        IRepository<Ticket> ticketRepository,
+        ITextAiService aiService,
+        ILogger<TicketsController> logger)
     {
         _mediator = mediator;
         _ticketRepository = ticketRepository;
         _aiService = aiService;
+        _logger = logger;
     }
 
     [HttpPost]
@@ -106,21 +114,39 @@ public class TicketsController : ControllerBase
     [HttpPost("suggest-priority")]
     public async Task<IActionResult> SuggestPriority([FromBody] SuggestPriorityRequest request)
     {
-        var priority = await _aiService.SuggestCasePriorityAsync(request.Title, request.Description);
-        return Ok(new { priority });
+        try
+        {
+            var priority = await _aiService.SuggestCasePriorityAsync(
+                request.Title,
+                request.Description,
+                request.ToProviderOptions());
+            return Ok(new { priority });
+        }
+        catch (Exception ex) when (AiRequestExceptionHandling.TryHandle(ex, _logger) is { } result)
+        {
+            return result;
+        }
     }
 
     [HttpPost("{id:guid}/summarize")]
-    public async Task<IActionResult> SummarizeTicket(Guid id)
+    public async Task<IActionResult> SummarizeTicket(
+        Guid id,
+        [FromBody(EmptyBodyBehavior = Microsoft.AspNetCore.Mvc.ModelBinding.EmptyBodyBehavior.Allow)]
+        SummarizeCaseRequest? request)
     {
         try
         {
-            var summary = await _mediator.Send(new SummarizeSupportCaseQuery(id));
+            var providerOptions = request?.ToProviderOptions();
+            var summary = await _mediator.Send(new SummarizeSupportCaseQuery(id, providerOptions));
             return Ok(new { summary });
         }
         catch (KeyNotFoundException)
         {
             return NotFound();
+        }
+        catch (Exception ex) when (AiRequestExceptionHandling.TryHandle(ex, _logger) is { } result)
+        {
+            return result;
         }
     }
 
@@ -145,4 +171,13 @@ public record CreateSupportCaseRequest(
 
 public record UpdateCaseStatusRequest(string Status);
 public record UpdateCasePriorityRequest(string Priority);
-public record SuggestPriorityRequest(string Title, string Description);
+
+public class SuggestPriorityRequest : AiRequestFields
+{
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+}
+
+public class SummarizeCaseRequest : AiRequestFields
+{
+}

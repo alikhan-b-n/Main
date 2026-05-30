@@ -1,6 +1,8 @@
+using Lama.Api.AiRequests;
 using Lama.Domain.CustomerService.Entities;
 using Lama.Domain.SalesManagement.Entities;
 using Lama.Infrastructure.Persistence;
+using Lama.Integrations.AI.Exceptions;
 using Lama.Integrations.AI.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,11 +15,16 @@ public class DashboardController : ControllerBase
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly ITextAiService _aiService;
+    private readonly ILogger<DashboardController> _logger;
 
-    public DashboardController(ApplicationDbContext dbContext, ITextAiService aiService)
+    public DashboardController(
+        ApplicationDbContext dbContext,
+        ITextAiService aiService,
+        ILogger<DashboardController> logger)
     {
         _dbContext = dbContext;
         _aiService = aiService;
+        _logger = logger;
     }
 
     [HttpGet("stats")]
@@ -97,7 +104,7 @@ public class DashboardController : ControllerBase
     }
 
     [HttpGet("insight")]
-    public async Task<IActionResult> GetInsight()
+    public async Task<IActionResult> GetInsight([FromQuery] AiRequestFields aiRequest)
     {
         var now = DateTime.UtcNow;
         var firstDayOfCurrentMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -146,8 +153,15 @@ public class DashboardController : ControllerBase
             CalcTrend(curCases, prevCases)
         );
 
-        var insight = await _aiService.GenerateDashboardInsightAsync(ctx);
-        return Ok(new { insight });
+        try
+        {
+            var insight = await _aiService.GenerateDashboardInsightAsync(ctx, aiRequest.ToProviderOptions());
+            return Ok(new { insight });
+        }
+        catch (Exception ex) when (AiRequestExceptionHandling.TryHandle(ex, _logger) is { } result)
+        {
+            return result;
+        }
     }
 
     [HttpGet("pipeline-chart")]

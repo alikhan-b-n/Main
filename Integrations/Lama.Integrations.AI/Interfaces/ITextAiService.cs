@@ -1,11 +1,30 @@
+using Lama.Integrations.AI.Configuration;
+
 namespace Lama.Integrations.AI.Interfaces;
 
 public interface ITextAiService
 {
-    Task<string> SummarizeSupportCaseAsync(string title, string description, CancellationToken cancellationToken = default);
-    Task<string> GenerateDashboardInsightAsync(DashboardContext context, CancellationToken cancellationToken = default);
-    Task<string> SuggestCasePriorityAsync(string title, string description, CancellationToken cancellationToken = default);
-    Task<string> GenerateAccountHealthAsync(AccountHealthContext context, CancellationToken cancellationToken = default);
+    Task<string> SummarizeSupportCaseAsync(
+        string title,
+        string description,
+        AiProviderOptions? providerOptions = null,
+        CancellationToken cancellationToken = default);
+
+    Task<string> GenerateDashboardInsightAsync(
+        DashboardContext context,
+        AiProviderOptions? providerOptions = null,
+        CancellationToken cancellationToken = default);
+
+    Task<string> SuggestCasePriorityAsync(
+        string title,
+        string description,
+        AiProviderOptions? providerOptions = null,
+        CancellationToken cancellationToken = default);
+
+    Task<string> GenerateAccountHealthAsync(
+        AccountHealthContext context,
+        AiProviderOptions? providerOptions = null,
+        CancellationToken cancellationToken = default);
 }
 
 public record AccountHealthContext(

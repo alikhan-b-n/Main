@@ -4,7 +4,7 @@ using Lama.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
+using Lama.Integrations.AI.Clients;
 using Lama.Integrations.AI.Configuration;
 using Lama.Integrations.AI.Interfaces;
 using Lama.Integrations.AI.Services;
@@ -29,16 +29,25 @@ public static class DependencyInjection
         // Register repositories as scoped for EF Core
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
 
-        // Configure AI Integration
-        // Ollama settings from appsettings.json
+        // AI provider defaults from appsettings.json. API keys are NEVER
+        // configured here — they always come from the request payload.
         services.Configure<OllamaSettings>(configuration.GetSection(OllamaSettings.SectionName));
+        services.Configure<LmStudioSettings>(configuration.GetSection(LmStudioSettings.SectionName));
+        services.Configure<GroqSettings>(configuration.GetSection(GroqSettings.SectionName));
 
-        // Register HttpClient for Ollama with typed client
-        services.AddHttpClient<ITextAiService, OllamaTextAiService>();
+        // Named HttpClients used by the completion clients.
+        services.AddHttpClient(OllamaCompletionClient.HttpClientName);
+        services.AddHttpClient(OpenAiCompatibleCompletionClient.HttpClientName);
 
-        // Note: OllamaTextAiService is an AI client library
-        // Business logic (commands/queries/handlers) are in Application layer
-        // Falls back to simple heuristic if Ollama is not running
+        // Provider-level clients (registered as singletons — they hold no
+        // request-scoped state; HttpClient lifetimes are managed by
+        // IHttpClientFactory).
+        services.AddSingleton<OllamaCompletionClient>();
+        services.AddSingleton<OpenAiCompatibleCompletionClient>();
+        services.AddSingleton<IAiCompletionClientFactory, AiCompletionClientFactory>();
+
+        // Scenario-level service (provider-agnostic — routes through the factory).
+        services.AddScoped<ITextAiService, TextAiService>();
 
         return services;
     }

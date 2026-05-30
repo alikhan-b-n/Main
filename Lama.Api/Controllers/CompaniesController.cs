@@ -1,3 +1,4 @@
+using Lama.Api.AiRequests;
 using Lama.Application.Common;
 using Lama.Application.CustomerManagement.Commands;
 using Lama.Application.CustomerManagement.Queries;
@@ -5,6 +6,7 @@ using Lama.Domain.CustomerManagement.Entities;
 using Lama.Domain.CustomerService.Entities;
 using Lama.Domain.SalesManagement.Entities;
 using Lama.Infrastructure.Persistence;
+using Lama.Integrations.AI.Exceptions;
 using Lama.Integrations.AI.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -20,17 +22,20 @@ public class CompaniesController : ControllerBase
     private readonly IRepository<Company> _companyRepository;
     private readonly ApplicationDbContext _dbContext;
     private readonly ITextAiService _aiService;
+    private readonly ILogger<CompaniesController> _logger;
 
     public CompaniesController(
         IMediator mediator,
         IRepository<Company> companyRepository,
         ApplicationDbContext dbContext,
-        ITextAiService aiService)
+        ITextAiService aiService,
+        ILogger<CompaniesController> logger)
     {
         _mediator = mediator;
         _companyRepository = companyRepository;
         _dbContext = dbContext;
         _aiService = aiService;
+        _logger = logger;
     }
 
     [HttpPost]
@@ -80,7 +85,7 @@ public class CompaniesController : ControllerBase
     }
 
     [HttpGet("{id:guid}/health")]
-    public async Task<IActionResult> GetAccountHealth(Guid id)
+    public async Task<IActionResult> GetAccountHealth(Guid id, [FromQuery] AiRequestFields aiRequest)
     {
         var company = await _companyRepository.GetByIdAsync(id);
         if (company == null) return NotFound();
@@ -120,8 +125,15 @@ public class CompaniesController : ControllerBase
             daysSinceLastContact
         );
 
-        var summary = await _aiService.GenerateAccountHealthAsync(ctx);
-        return Ok(new { summary, data = ctx });
+        try
+        {
+            var summary = await _aiService.GenerateAccountHealthAsync(ctx, aiRequest.ToProviderOptions());
+            return Ok(new { summary, data = ctx });
+        }
+        catch (Exception ex) when (AiRequestExceptionHandling.TryHandle(ex, _logger) is { } result)
+        {
+            return result;
+        }
     }
 }
 
