@@ -24,7 +24,7 @@ public class Ticket : AggregateRoot
         Status = TicketStatus.Open;
     }
 
-    public static Ticket Create(string ticketName, string description, TicketPriority priority, TicketSource source, Guid? contactId = null)
+    public static Ticket Create(string ticketName, string description, TicketPriority priority, TicketSource source)
     {
         if (string.IsNullOrWhiteSpace(ticketName))
             throw new ArgumentException("Ticket name cannot be empty", nameof(ticketName));

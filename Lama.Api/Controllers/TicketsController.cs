@@ -2,6 +2,7 @@ using Lama.Application.Common;
 using Lama.Application.TicketManagement.Commands;
 using Lama.Application.TicketManagement.Queries;
 using Lama.Domain.CustomerService.Entities;
+using Lama.Integrations.AI.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,11 +14,13 @@ public class TicketsController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly IRepository<Ticket> _ticketRepository;
+    private readonly ITextAiService _aiService;
 
-    public TicketsController(IMediator mediator, IRepository<Ticket> ticketRepository)
+    public TicketsController(IMediator mediator, IRepository<Ticket> ticketRepository, ITextAiService aiService)
     {
         _mediator = mediator;
         _ticketRepository = ticketRepository;
+        _aiService = aiService;
     }
 
     [HttpPost]
@@ -100,6 +103,13 @@ public class TicketsController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("suggest-priority")]
+    public async Task<IActionResult> SuggestPriority([FromBody] SuggestPriorityRequest request)
+    {
+        var priority = await _aiService.SuggestCasePriorityAsync(request.Title, request.Description);
+        return Ok(new { priority });
+    }
+
     [HttpPost("{id:guid}/summarize")]
     public async Task<IActionResult> SummarizeTicket(Guid id)
     {
@@ -135,3 +145,4 @@ public record CreateSupportCaseRequest(
 
 public record UpdateCaseStatusRequest(string Status);
 public record UpdateCasePriorityRequest(string Priority);
+public record SuggestPriorityRequest(string Title, string Description);

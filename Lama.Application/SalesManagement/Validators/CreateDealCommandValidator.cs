@@ -17,9 +17,6 @@ public class CreateDealCommandValidator : AbstractValidator<CreateDealCommand>
         RuleFor(x => x.Amount)
             .GreaterThanOrEqualTo(0).WithMessage("Amount must be non-negative");
 
-        RuleFor(x => x.ExpectedCloseDate)
-            .GreaterThanOrEqualTo(DateTime.UtcNow.Date).WithMessage("Expected close date must be today or in the future");
-
         RuleFor(x => x.Currency)
             .NotEmpty().WithMessage("Currency is required")
             .Length(3).WithMessage("Currency must be 3 characters (ISO 4217)");

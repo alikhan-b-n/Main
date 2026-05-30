@@ -1,6 +1,5 @@
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Lama.Integrations.AI.Configuration;
 using Lama.Integrations.AI.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -8,11 +7,6 @@ using Microsoft.Extensions.Options;
 
 namespace Lama.Integrations.AI.Services;
 
-/// <summary>
-/// AI text service implementation using Ollama (local LLM).
-/// Ollama is a free, local AI solution that runs models like Llama 3, Mistral, etc.
-/// No API key required!
-/// </summary>
 public class OllamaTextAiService : ITextAiService
 {
     private readonly HttpClient _httpClient;
@@ -26,72 +20,188 @@ public class OllamaTextAiService : ITextAiService
     {
         _httpClient = httpClient;
         _settings = settings.Value;
-        _logger = logger;
-
-        // Configure HttpClient
         _httpClient.BaseAddress = new Uri(_settings.BaseUrl);
         _httpClient.Timeout = TimeSpan.FromSeconds(_settings.TimeoutSeconds);
+        _logger = logger;
     }
 
-    public async Task<string> SummarizeAsync(string? subject, string? body, CancellationToken cancellationToken = default)
+    public async Task<string> SummarizeSupportCaseAsync(string title, string description, CancellationToken cancellationToken = default)
     {
+        var prompt = $"""
+            You are a CRM assistant. Summarize the following customer support case in one short sentence (max 20 words).
+            Be direct and factual. Do not start with "The customer" or "This case". Just state the core issue.
+
+            Title: {title}
+            Description: {description}
+
+            Summary:
+            """;
+
         try
         {
-            // Build the prompt
-            var prompt = BuildSummarizationPrompt(subject, body);
-
-            if (string.IsNullOrWhiteSpace(prompt))
-            {
-                return string.Empty;
-            }
-
-            // Call Ollama API
-            var response = await GenerateTextAsync(prompt, cancellationToken);
-
-            return response ?? string.Empty;
+            var result = await CallOllamaAsync(prompt, cancellationToken);
+            return result ?? FallbackSummary(description);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to summarize text using Ollama");
-
-            // Fallback to simple heuristic if Ollama is unavailable
-            return FallbackSummarization(subject, body);
+            _logger.LogWarning(ex, "Ollama unavailable, using fallback summarization");
+            return FallbackSummary(description);
         }
     }
 
-    private string BuildSummarizationPrompt(string? subject, string? body)
+    public async Task<string> GenerateDashboardInsightAsync(DashboardContext ctx, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(subject) && string.IsNullOrWhiteSpace(body))
+        static string Trend(int t) => t >= 0 ? $"+{t}%" : $"{t}%";
+
+        var prompt = $"""
+            You are a CRM business analyst. Given the metrics below, write exactly 2 sentences of natural-language insight for a sales manager.
+            Highlight what is most notable — either a positive trend or a concern. Be direct. No bullet points, no headings.
+
+            Metrics:
+            - Accounts: {ctx.TotalAccounts} ({Trend(ctx.TrendAccounts)} vs last month)
+            - Contacts: {ctx.TotalContacts} ({Trend(ctx.TrendContacts)} vs last month)
+            - Opportunities: {ctx.TotalOpportunities} ({Trend(ctx.TrendOpportunities)} vs last month)
+            - Open support cases: {ctx.OpenCases} ({Trend(ctx.TrendCases)} vs last month)
+            - Active pipeline value: ${ctx.PipelineValue:N0}
+            - Deals realized this month: {ctx.WonDealsThisMonth}
+            - Conversion rate: {ctx.ConversionRate}%
+
+            Insight:
+            """;
+
+        try
         {
-            return string.Empty;
+            var result = await CallOllamaAsync(prompt, cancellationToken);
+            return result ?? FallbackInsight(ctx);
         }
-
-        var content = new StringBuilder();
-
-        if (!string.IsNullOrWhiteSpace(subject))
+        catch (Exception ex)
         {
-            content.AppendLine($"Subject: {subject}");
+            _logger.LogWarning(ex, "Ollama unavailable for dashboard insight");
+            return FallbackInsight(ctx);
         }
-
-        if (!string.IsNullOrWhiteSpace(body))
-        {
-            content.AppendLine($"Body: {body}");
-        }
-
-        return $@"Please provide a concise summary of the following activity in 1-2 sentences.
-Focus on the key points and action items.
-
-{content}
-
-Summary:";
     }
 
-    private async Task<string?> GenerateTextAsync(string prompt, CancellationToken cancellationToken)
+    public async Task<string> SuggestCasePriorityAsync(string title, string description, CancellationToken cancellationToken = default)
+    {
+        var prompt = $"""
+            You are a CRM support triage assistant. Based on the support case below, respond with exactly one word — the priority level.
+            Choose only from: Low, Medium, High, Critical.
+
+            Rules:
+            - Critical: system down, data loss, security breach, business completely blocked
+            - High: major feature broken, significant business impact, no workaround
+            - Medium: partial issue, workaround exists, moderate impact
+            - Low: question, minor inconvenience, cosmetic issue, feature request
+
+            Title: {title}
+            Description: {description}
+
+            Priority (one word only):
+            """;
+
+        try
+        {
+            var result = await CallOllamaAsync(prompt, cancellationToken);
+            return NormalizePriority(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Ollama unavailable for priority suggestion");
+            return "Medium";
+        }
+    }
+
+    private static string NormalizePriority(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return "Medium";
+        var cleaned = raw.Trim().Split(' ', '\n')[0].ToLowerInvariant().Trim('.');
+        return cleaned switch
+        {
+            "critical" or "urgent" => "Critical",
+            "high"                 => "High",
+            "low"                  => "Low",
+            _                      => "Medium",
+        };
+    }
+
+    public async Task<string> GenerateAccountHealthAsync(AccountHealthContext ctx, CancellationToken cancellationToken = default)
+    {
+        var lastContact = ctx.DaysSinceLastContact.HasValue
+            ? ctx.DaysSinceLastContact == 0 ? "today" : $"{ctx.DaysSinceLastContact} day{(ctx.DaysSinceLastContact == 1 ? "" : "s")} ago"
+            : "unknown";
+
+        var prompt = $"""
+            You are a CRM analyst. Write a single short sentence (max 25 words) summarizing the health of this account.
+            Be factual. Mention the most important signals — critical cases are urgent, no open cases is positive.
+            Do not start with the account name.
+
+            Account: {ctx.AccountName} ({ctx.Industry ?? "no industry"})
+            Contacts on record: {ctx.TotalContacts}
+            Open support cases: {ctx.OpenCases} ({ctx.CriticalCases} critical)
+            Relevant opportunities: {ctx.RelevantOpportunities}
+            Last contact added: {lastContact}
+
+            Health summary:
+            """;
+
+        try
+        {
+            var result = await CallOllamaAsync(prompt, cancellationToken);
+            return result ?? FallbackHealth(ctx);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Ollama unavailable for account health");
+            return FallbackHealth(ctx);
+        }
+    }
+
+    private static string FallbackHealth(AccountHealthContext ctx)
+    {
+        var parts = new List<string>();
+
+        if (ctx.CriticalCases > 0)
+            parts.Add($"{ctx.CriticalCases} critical case{(ctx.CriticalCases > 1 ? "s" : "")} open.");
+        else if (ctx.OpenCases == 0)
+            parts.Add("No open support cases.");
+        else
+            parts.Add($"{ctx.OpenCases} open case{(ctx.OpenCases > 1 ? "s" : "")}.");
+
+        if (ctx.RelevantOpportunities > 0)
+            parts.Add($"{ctx.RelevantOpportunities} relevant opportunit{(ctx.RelevantOpportunities > 1 ? "ies" : "y")}.");
+
+        if (ctx.DaysSinceLastContact.HasValue)
+            parts.Add($"Last contact {ctx.DaysSinceLastContact} day{(ctx.DaysSinceLastContact == 1 ? "" : "s")} ago.");
+
+        return parts.Count > 0 ? string.Join(" ", parts) : $"{ctx.TotalContacts} contact{(ctx.TotalContacts != 1 ? "s" : "")} on record.";
+    }
+
+    private static string FallbackInsight(DashboardContext ctx)
+    {
+        var parts = new List<string>();
+
+        if (ctx.OpenCases > 5)
+            parts.Add($"{ctx.OpenCases} open support cases require attention.");
+        else if (ctx.OpenCases == 0)
+            parts.Add("No open support cases — customer service is on track.");
+
+        if (ctx.WonDealsThisMonth > 0)
+            parts.Add($"{ctx.WonDealsThisMonth} deal{(ctx.WonDealsThisMonth > 1 ? "s" : "")} realized this month with a {ctx.ConversionRate}% conversion rate.");
+
+        if (ctx.PipelineValue > 0)
+            parts.Add($"Active pipeline stands at ${ctx.PipelineValue:N0}.");
+
+        return parts.Count > 0
+            ? string.Join(" ", parts)
+            : $"Tracking {ctx.TotalAccounts} accounts, {ctx.TotalOpportunities} opportunities, and {ctx.OpenCases} open cases.";
+    }
+
+    private async Task<string?> CallOllamaAsync(string prompt, CancellationToken cancellationToken)
     {
         var requestBody = new
         {
             model = _settings.Model,
-            prompt = prompt,
+            prompt,
             stream = false,
             options = new
             {
@@ -100,66 +210,35 @@ Summary:";
             }
         };
 
-        var json = JsonSerializer.Serialize(requestBody);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-        _logger.LogInformation("Calling Ollama API with model: {Model}", _settings.Model);
+        var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+        _logger.LogInformation("Calling Ollama with model: {Model}", _settings.Model);
 
         var response = await _httpClient.PostAsync("/api/generate", content, cancellationToken);
-
         if (!response.IsSuccessStatusCode)
         {
-            var error = await response.Content.ReadAsStringAsync(cancellationToken);
-            _logger.LogWarning("Ollama API returned error: {StatusCode} - {Error}", response.StatusCode, error);
+            _logger.LogWarning("Ollama returned {Status}", response.StatusCode);
             return null;
         }
 
-        var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
-
-        // Deserialize with case-insensitive options
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-        var result = JsonSerializer.Deserialize<OllamaResponse>(responseJson, options);
-
+        var json = await response.Content.ReadAsStringAsync(cancellationToken);
+        var result = JsonSerializer.Deserialize<OllamaResponse>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         return result?.Response?.Trim();
     }
 
-    private string FallbackSummarization(string? subject, string? body)
+    private static string FallbackSummary(string description)
     {
-        _logger.LogWarning("Using fallback summarization (Ollama unavailable)");
-
-        if (string.IsNullOrWhiteSpace(subject) && string.IsNullOrWhiteSpace(body))
-            return string.Empty;
-
-        if (!string.IsNullOrWhiteSpace(subject) && string.IsNullOrWhiteSpace(body))
-            return subject.Trim();
-
-        var combined = (subject + "\n\n" + (body ?? string.Empty)).Trim();
-
-        // Try to extract the first sentence from the body
-        var sentences = body?.Split(new[] { '.', '!', '?' }, StringSplitOptions.RemoveEmptyEntries)
+        var first = description.Split(new[] { '.', '!', '?' }, StringSplitOptions.RemoveEmptyEntries)
             .Select(s => s.Trim())
-            .Where(s => !string.IsNullOrWhiteSpace(s));
+            .FirstOrDefault(s => s.Length > 0);
 
-        if (sentences != null && sentences.Any())
-        {
-            var first = sentences.First();
-            var result = !string.IsNullOrWhiteSpace(subject) ? subject.Trim() + " — " + first : first;
-            if (result.Length <= 500) return result;
-        }
+        if (first != null)
+            return first.Length <= 120 ? first : first[..117] + "...";
 
-        // Fallback: take first 200 characters of combined text
-        var snippet = combined.Length <= 200 ? combined : combined.Substring(0, 197) + "...";
-        return snippet;
+        return description.Length <= 120 ? description : description[..117] + "...";
     }
 
-    // Response model for Ollama API
     private class OllamaResponse
     {
-        public string? Model { get; set; }
         public string? Response { get; set; }
-        public bool Done { get; set; }
     }
 }

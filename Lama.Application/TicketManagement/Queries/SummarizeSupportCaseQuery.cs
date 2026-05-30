@@ -25,7 +25,7 @@ public class SummarizeSupportCaseQueryHandler : IQueryHandler<SummarizeSupportCa
         if (ticket == null)
             throw new KeyNotFoundException($"Support case {query.TicketId} not found");
 
-        var summary = await _textAiService.SummarizeAsync(ticket.TicketName, ticket.Description, cancellationToken);
+        var summary = await _textAiService.SummarizeSupportCaseAsync(ticket.TicketName, ticket.Description, cancellationToken);
         return summary;
     }
 }

@@ -8,7 +8,6 @@ public record CreateTicketCommand(
     string Description,
     TicketPriority Priority,
     TicketSource Source,
-    Guid? ContactId = null,
     Guid? CompanyId = null,
     Guid? OwnerId = null
 ) : ICommand<Guid>;
@@ -28,8 +27,7 @@ public class CreateTicketCommandHandler : ICommandHandler<CreateTicketCommand, G
             command.TicketName,
             command.Description,
             command.Priority,
-            command.Source,
-            command.ContactId
+            command.Source
         );
 
         if (command.CompanyId.HasValue)

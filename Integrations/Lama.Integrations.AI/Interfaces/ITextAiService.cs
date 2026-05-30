@@ -2,12 +2,32 @@ namespace Lama.Integrations.AI.Interfaces;
 
 public interface ITextAiService
 {
-    /// <summary>
-    /// Generate a short summary for the provided text (subject + body).
-    /// Implementations may call external providers (OpenAI, Azure) or local summarizers.
-    /// </summary>
-    /// <param name="subject">Activity subject (may be null/empty)</param>
-    /// <param name="body">Activity body (may be null/empty)</param>
-    /// <returns>Summary text</returns>
-    Task<string> SummarizeAsync(string? subject, string? body, CancellationToken cancellationToken = default);
+    Task<string> SummarizeSupportCaseAsync(string title, string description, CancellationToken cancellationToken = default);
+    Task<string> GenerateDashboardInsightAsync(DashboardContext context, CancellationToken cancellationToken = default);
+    Task<string> SuggestCasePriorityAsync(string title, string description, CancellationToken cancellationToken = default);
+    Task<string> GenerateAccountHealthAsync(AccountHealthContext context, CancellationToken cancellationToken = default);
 }
+
+public record AccountHealthContext(
+    string AccountName,
+    string? Industry,
+    int TotalContacts,
+    int OpenCases,
+    int CriticalCases,
+    int RelevantOpportunities,
+    int? DaysSinceLastContact
+);
+
+public record DashboardContext(
+    int TotalAccounts,
+    int TotalContacts,
+    int TotalOpportunities,
+    int OpenCases,
+    decimal PipelineValue,
+    int WonDealsThisMonth,
+    int ConversionRate,
+    int TrendAccounts,
+    int TrendContacts,
+    int TrendOpportunities,
+    int TrendCases
+);

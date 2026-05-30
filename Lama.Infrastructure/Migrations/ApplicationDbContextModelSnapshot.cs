@@ -76,7 +76,7 @@ namespace Lama.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Activities");
+                    b.ToTable("Activities", (string)null);
                 });
 
             modelBuilder.Entity("Lama.Domain.CustomerManagement.Entities.Company", b =>
@@ -313,49 +313,11 @@ namespace Lama.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Employees");
+                    b.ToTable("Employees", (string)null);
                 });
 
             modelBuilder.Entity("Lama.Domain.CustomerManagement.Entities.Company", b =>
                 {
-                    b.OwnsOne("Lama.Domain.CustomerManagement.ValueObjects.Email", "Email", b1 =>
-                        {
-                            b1.Property<Guid>("CompanyId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(255)
-                                .HasColumnType("character varying(255)")
-                                .HasColumnName("Email");
-
-                            b1.HasKey("CompanyId");
-
-                            b1.ToTable("Companies");
-
-                            b1.WithOwner()
-                                .HasForeignKey("CompanyId");
-                        });
-
-                    b.OwnsOne("Lama.Domain.CustomerManagement.ValueObjects.PhoneNumber", "PhoneNumber", b1 =>
-                        {
-                            b1.Property<Guid>("CompanyId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("character varying(50)")
-                                .HasColumnName("PhoneNumber");
-
-                            b1.HasKey("CompanyId");
-
-                            b1.ToTable("Companies");
-
-                            b1.WithOwner()
-                                .HasForeignKey("CompanyId");
-                        });
-
                     b.OwnsOne("Lama.Domain.CustomerManagement.ValueObjects.Address", "Address", b1 =>
                         {
                             b1.Property<Guid>("CompanyId")
@@ -393,7 +355,45 @@ namespace Lama.Infrastructure.Migrations
 
                             b1.HasKey("CompanyId");
 
-                            b1.ToTable("Companies");
+                            b1.ToTable("Companies", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("CompanyId");
+                        });
+
+                    b.OwnsOne("Lama.Domain.CustomerManagement.ValueObjects.Email", "Email", b1 =>
+                        {
+                            b1.Property<Guid>("CompanyId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(255)
+                                .HasColumnType("character varying(255)")
+                                .HasColumnName("Email");
+
+                            b1.HasKey("CompanyId");
+
+                            b1.ToTable("Companies", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("CompanyId");
+                        });
+
+                    b.OwnsOne("Lama.Domain.CustomerManagement.ValueObjects.PhoneNumber", "PhoneNumber", b1 =>
+                        {
+                            b1.Property<Guid>("CompanyId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("character varying(50)")
+                                .HasColumnName("PhoneNumber");
+
+                            b1.HasKey("CompanyId");
+
+                            b1.ToTable("Companies", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("CompanyId");
@@ -426,7 +426,7 @@ namespace Lama.Infrastructure.Migrations
 
                             b1.HasKey("ContactId");
 
-                            b1.ToTable("Contacts");
+                            b1.ToTable("Contacts", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("ContactId");
@@ -445,7 +445,7 @@ namespace Lama.Infrastructure.Migrations
 
                             b1.HasKey("ContactId");
 
-                            b1.ToTable("Contacts");
+                            b1.ToTable("Contacts", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("ContactId");
@@ -479,7 +479,7 @@ namespace Lama.Infrastructure.Migrations
 
                             b1.HasKey("DealId");
 
-                            b1.ToTable("Deals");
+                            b1.ToTable("Deals", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("DealId");

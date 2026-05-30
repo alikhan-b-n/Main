@@ -2,8 +2,13 @@ using Lama.Application.Common;
 using Lama.Application.CustomerManagement.Commands;
 using Lama.Application.CustomerManagement.Queries;
 using Lama.Domain.CustomerManagement.Entities;
+using Lama.Domain.CustomerService.Entities;
+using Lama.Domain.SalesManagement.Entities;
+using Lama.Infrastructure.Persistence;
+using Lama.Integrations.AI.Interfaces;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Lama.Api.Controllers;
 
@@ -13,13 +18,19 @@ public class CompaniesController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly IRepository<Company> _companyRepository;
+    private readonly ApplicationDbContext _dbContext;
+    private readonly ITextAiService _aiService;
 
     public CompaniesController(
         IMediator mediator,
-        IRepository<Company> companyRepository)
+        IRepository<Company> companyRepository,
+        ApplicationDbContext dbContext,
+        ITextAiService aiService)
     {
         _mediator = mediator;
         _companyRepository = companyRepository;
+        _dbContext = dbContext;
+        _aiService = aiService;
     }
 
     [HttpPost]
@@ -66,6 +77,51 @@ public class CompaniesController : ControllerBase
         var command = new DeleteCompanyCommand(id);
         await _mediator.Send(command);
         return NoContent();
+    }
+
+    [HttpGet("{id:guid}/health")]
+    public async Task<IActionResult> GetAccountHealth(Guid id)
+    {
+        var company = await _companyRepository.GetByIdAsync(id);
+        if (company == null) return NotFound();
+
+        var now = DateTime.UtcNow;
+
+        var totalContacts = await _dbContext.Contacts.CountAsync(c => c.CompanyId == id);
+
+        var openTickets = await _dbContext.Tickets
+            .Where(t => t.CompanyId == id &&
+                        (t.Status == TicketStatus.Open || t.Status == TicketStatus.InProgress || t.Status == TicketStatus.Waiting))
+            .ToListAsync();
+
+        var openCases = openTickets.Count;
+        var criticalCases = openTickets.Count(t => t.Priority == TicketPriority.Urgent);
+
+        var relevantOpportunities = await _dbContext.Deals
+            .CountAsync(d => d.CompanyId == id && d.Status == OpportunityStatus.Relevant);
+
+        var lastContact = await _dbContext.Contacts
+            .Where(c => c.CompanyId == id)
+            .OrderByDescending(c => c.CreatedAt)
+            .Select(c => (DateTime?)c.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        int? daysSinceLastContact = lastContact.HasValue
+            ? (int)(now - lastContact.Value).TotalDays
+            : null;
+
+        var ctx = new AccountHealthContext(
+            company.Name,
+            company.Industry,
+            totalContacts,
+            openCases,
+            criticalCases,
+            relevantOpportunities,
+            daysSinceLastContact
+        );
+
+        var summary = await _aiService.GenerateAccountHealthAsync(ctx);
+        return Ok(new { summary, data = ctx });
     }
 }
 

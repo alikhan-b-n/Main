@@ -32,8 +32,6 @@ public class Deal : AggregateRoot
             throw new ArgumentException("Deal name cannot be empty", nameof(name));
         if (companyId == Guid.Empty)
             throw new ArgumentException("Company ID cannot be empty", nameof(companyId));
-        if (expectedCloseDate.Date < DateTime.UtcNow.Date)
-            throw new ArgumentException("Expected close date must be today or in the future", nameof(expectedCloseDate));
 
         return new Deal(name, companyId, Money.Create(amount, currency), expectedCloseDate);
     }
@@ -78,6 +76,8 @@ public class Deal : AggregateRoot
     public void UpdateStatus(OpportunityStatus status)
     {
         Status = status;
+        if (status == OpportunityStatus.RealizedRevenue)
+            ActualCloseDate = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
 }
