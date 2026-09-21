@@ -3,8 +3,10 @@ using MediatR;
 
 namespace Lama.Application.Common.Behaviors;
 
+// `notnull` rather than IRequest<TResponse>: void commands (ICommand) don't implement
+// IRequest<TResponse>, so with the narrower constraint their validators never ran.
 public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
+    where TRequest : notnull
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
 

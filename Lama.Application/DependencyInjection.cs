@@ -3,6 +3,7 @@ using FluentValidation;
 using Lama.Application.Common.Behaviors;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Lama.Application;
 
@@ -25,6 +26,9 @@ public static class DependencyInjection
 
         // Register all validators from this assembly for FluentValidation
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+
+        // Clock abstraction for time-dependent queries (lead stats), swappable in tests
+        services.TryAddSingleton(TimeProvider.System);
 
         return services;
     }

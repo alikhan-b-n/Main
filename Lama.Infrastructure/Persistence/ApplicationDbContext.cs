@@ -3,6 +3,7 @@ using Lama.Domain.CustomerService.Entities;
 using Lama.Domain.SalesManagement.Entities;
 using Lama.Domain.ActivityManagement.Entities;
 using Lama.Domain.UserManagement.Entities;
+using Lama.Domain.LeadManagement.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lama.Infrastructure.Persistence;
@@ -26,6 +27,10 @@ public class ApplicationDbContext : DbContext
     // Activity & User Management
     public DbSet<Activity> Activities => Set<Activity>();
     public DbSet<Employee> Employees => Set<Employee>();
+
+    // Lead Management (IconicU Telegram bot intake)
+    public DbSet<Lead> Leads => Set<Lead>();
+    public DbSet<LeadEvent> LeadEvents => Set<LeadEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -77,6 +82,14 @@ public class ApplicationDbContext : DbContext
             .OwnsOne(c => c.PhoneNumber, phone =>
             {
                 phone.Property(p => p.Value).HasColumnName("PhoneNumber").HasMaxLength(50);
+            });
+
+        // Email value object for Lead
+        modelBuilder.Entity<Lead>()
+            .OwnsOne(l => l.Email, email =>
+            {
+                email.Property(e => e.Value).HasColumnName("Email").HasMaxLength(255).IsRequired();
+                email.HasIndex(e => e.Value);
             });
 
         // Money value object for Deal

@@ -1,3 +1,4 @@
+using Lama.Api.Integrations.TelegramBot;
 using Lama.Application;
 using Lama.Infrastructure;
 
@@ -23,6 +24,10 @@ builder.Services.AddCors(options =>
 // Add Application and Infrastructure layers
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// IconicU Telegram bot intake (POST /api/integrations/telegram/leads)
+builder.Services.Configure<TelegramBotOptions>(
+    builder.Configuration.GetSection(TelegramBotOptions.SectionName));
 
 var app = builder.Build();
 

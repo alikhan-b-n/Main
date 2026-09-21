@@ -1,4 +1,5 @@
 using Lama.Application.Common;
+using Lama.Application.LeadManagement;
 using Lama.Infrastructure.Persistence;
 using Lama.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +29,7 @@ public static class DependencyInjection
 
         // Register repositories as scoped for EF Core
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+        services.AddScoped<ILeadRepository, LeadRepository>();
 
         // AI provider defaults from appsettings.json. API keys are NEVER
         // configured here — they always come from the request payload.
