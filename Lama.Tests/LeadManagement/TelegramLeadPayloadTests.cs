@@ -43,6 +43,24 @@ public class TelegramLeadPayloadTests
         Assert.Equal("IELTS 7.0", q.EnglishScore);
         Assert.Equal("IT", q.FieldsOfInterest);
         Assert.Equal(new[] { "programs", "turnkey" }, q.ServicesNeeded);
+        Assert.Equal("scholarship", q.UniversityPriority);
+        Assert.Equal("call", submission.NextStep);
+    }
+
+    [Fact]
+    public void ToSubmission_KeepsCustomCountryNextToCodes()
+    {
+        // The bot appends a typed-in country ("Ирландия") to the selected codes
+        const string json = """
+            {"contact":{"full_name":"A B","email":"a@b.kz"},
+             "qualification":{"target_countries":["europe","Ирландия"],"services_needed":["full_mentoring"]}}
+            """;
+
+        var lead = Lead.Create(Parse(json).ToSubmission("{}", ReceivedAt));
+
+        Assert.Equal(new[] { "europe", "Ирландия" }, lead.TargetCountries);
+        Assert.Equal(new[] { "full_mentoring" }, lead.ServicesNeeded);
+        Assert.Null(lead.NextStep);
     }
 
     [Fact]

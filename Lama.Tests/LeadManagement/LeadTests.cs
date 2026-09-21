@@ -19,8 +19,9 @@ public class LeadTests
     }
 
     [Theory]
-    [InlineData(11, LeadTemperature.Hot)]
+    [InlineData(10, LeadTemperature.Hot)]
     [InlineData(8, LeadTemperature.Hot)]
+    [InlineData(7, LeadTemperature.Warm)]
     [InlineData(5, LeadTemperature.Warm)]
     [InlineData(4, LeadTemperature.Cold)]
     public void Create_WithoutTemperature_DerivesItFromScore(int score, LeadTemperature expected)

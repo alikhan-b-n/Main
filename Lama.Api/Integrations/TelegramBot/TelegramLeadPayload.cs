@@ -9,6 +9,7 @@ namespace Lama.Api.Integrations.TelegramBot;
 /// </summary>
 public record TelegramLeadPayload(
     [property: JsonPropertyName("lead_id")] string? LeadId,
+    [property: JsonPropertyName("next_step")] string? NextStep,
     [property: JsonPropertyName("channel")] string? Channel,
     [property: JsonPropertyName("created_at")] DateTimeOffset? CreatedAt,
     [property: JsonPropertyName("lead_source")] string? LeadSource,
@@ -52,12 +53,14 @@ public record TelegramLeadPayload(
                 EnglishCertificate: q.EnglishCertificate,
                 EnglishScore: q.EnglishScore,
                 FieldsOfInterest: q.FieldsOfInterest,
-                ServicesNeeded: q.ServicesNeeded),
+                ServicesNeeded: q.ServicesNeeded,
+                UniversityPriority: q.UniversityPriority),
             Score: Score ?? 0,
             Temperature: temperature,
             SurveySummary: Note,
             RawPayload: rawPayload,
-            SubmittedAt: CreatedAt?.UtcDateTime ?? receivedAtUtc);
+            SubmittedAt: CreatedAt?.UtcDateTime ?? receivedAtUtc,
+            NextStep: NextStep);
     }
 }
 
@@ -83,5 +86,6 @@ public record TelegramLeadQualification(
     [property: JsonPropertyName("english_certificate")] string? EnglishCertificate = null,
     [property: JsonPropertyName("english_score")] string? EnglishScore = null,
     [property: JsonPropertyName("fields_of_interest")] string? FieldsOfInterest = null,
-    [property: JsonPropertyName("services_needed")] List<string>? ServicesNeeded = null
+    [property: JsonPropertyName("services_needed")] List<string>? ServicesNeeded = null,
+    [property: JsonPropertyName("university_priority")] string? UniversityPriority = null
 );

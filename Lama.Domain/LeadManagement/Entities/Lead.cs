@@ -36,9 +36,16 @@ public class Lead : AggregateRoot
     public string? EnglishScore { get; private set; }
     public string? FieldsOfInterest { get; private set; }
     public List<string> ServicesNeeded { get; private set; } = new();
+    public string? UniversityPriority { get; private set; }
 
     public int Score { get; private set; }
     public LeadTemperature Temperature { get; private set; }
+
+    /// <summary>
+    /// Branch the bot sent the person to: "call" (free intro call), "consultation" (paid €160
+    /// consultation), "potential" (5–7 points, no free call) or "nurture" (Telegram channel).
+    /// </summary>
+    public string? NextStep { get; private set; }
 
     // Funnel
     public LeadStatus Status { get; private set; }
@@ -135,9 +142,11 @@ public class Lead : AggregateRoot
         EnglishScore = NullIfBlank(q.EnglishScore);
         FieldsOfInterest = NullIfBlank(q.FieldsOfInterest);
         ServicesNeeded = Clean(q.ServicesNeeded);
+        UniversityPriority = NullIfBlank(q.UniversityPriority);
 
         Score = submission.Score;
         Temperature = submission.Temperature ?? LeadTemperatureRules.FromScore(submission.Score);
+        NextStep = NullIfBlank(submission.NextStep);
 
         SurveySummary = NullIfBlank(submission.SurveySummary);
         RawPayload = submission.RawPayload;
@@ -179,7 +188,8 @@ public enum LeadTemperature
 
 public static class LeadTemperatureRules
 {
-    // Same thresholds as the bot's temperature_for(): hot >= 8, warm >= 5.
+    // "Простая квалификация IconicU — 10 баллов", same as the bot's routing.temperature_for():
+    // 8–10 hot (intro call), 5–7 warm (consultation / more qualification), 0–4 cold (channel).
     public static LeadTemperature FromScore(int score) => score switch
     {
         >= 8 => LeadTemperature.Hot,

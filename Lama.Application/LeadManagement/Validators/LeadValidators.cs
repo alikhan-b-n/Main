@@ -30,6 +30,7 @@ public class SubmitTelegramLeadCommandValidator : AbstractValidator<SubmitTelegr
         RuleFor(x => x.Submission.ExternalId).MaximumLength(CodeLength);
         RuleFor(x => x.Submission.Score).InclusiveBetween(0, 100);
         RuleFor(x => x.Submission.SurveySummary).MaximumLength(4000);
+        RuleFor(x => x.Submission.NextStep).MaximumLength(16);
 
         RuleFor(x => x.Submission.Qualification).NotNull().ChildRules(q =>
         {
@@ -42,6 +43,7 @@ public class SubmitTelegramLeadCommandValidator : AbstractValidator<SubmitTelegr
             q.RuleFor(v => v.AnnualBudget).MaximumLength(CodeLength);
             q.RuleFor(v => v.EnglishLevel).MaximumLength(CodeLength);
             q.RuleFor(v => v.EnglishCertificate).MaximumLength(CodeLength);
+            q.RuleFor(v => v.UniversityPriority).MaximumLength(CodeLength);
             q.RuleFor(v => v.Gpa).MaximumLength(FreeTextLength);
             q.RuleFor(v => v.EnglishScore).MaximumLength(FreeTextLength);
             q.RuleFor(v => v.FieldsOfInterest).MaximumLength(FreeTextLength);

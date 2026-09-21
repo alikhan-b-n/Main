@@ -7,6 +7,7 @@ internal static class LeadSamples
     /// <summary>A payload produced by the bot's Lead.to_crm_payload() (qualification_labels trimmed).</summary>
     public const string BotPayloadJson = """
         {
+          "next_step": "call",
           "channel": "telegram_bot",
           "created_at": "2026-09-21T15:56:49+00:00",
           "lead_source": "instagram",
@@ -32,6 +33,7 @@ internal static class LeadSamples
             "english_score": "IELTS 7.0",
             "fields_of_interest": "IT",
             "services_needed": ["programs", "turnkey"],
+            "university_priority": "scholarship",
             "full_name": "Айгерим Сапарова",
             "email": "aigerim@gmail.com",
             "phone": "+77011234567",

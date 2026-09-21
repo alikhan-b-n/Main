@@ -14,7 +14,8 @@ public record LeadSubmission(
     LeadTemperature? Temperature,
     string? SurveySummary,
     string? RawPayload,
-    DateTime SubmittedAt
+    DateTime SubmittedAt,
+    string? NextStep = null
 );
 
 /// <summary>Survey answers as bot option codes.</summary>
@@ -32,5 +33,6 @@ public record LeadQualification(
     string? EnglishCertificate = null,
     string? EnglishScore = null,
     string? FieldsOfInterest = null,
-    IReadOnlyList<string>? ServicesNeeded = null
+    IReadOnlyList<string>? ServicesNeeded = null,
+    string? UniversityPriority = null
 );

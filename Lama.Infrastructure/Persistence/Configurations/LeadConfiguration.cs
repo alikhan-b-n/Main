@@ -34,6 +34,8 @@ public class LeadConfiguration : IEntityTypeConfiguration<Lead>
         builder.Property(l => l.Gpa).HasMaxLength(FreeTextLength);
         builder.Property(l => l.EnglishScore).HasMaxLength(FreeTextLength);
         builder.Property(l => l.FieldsOfInterest).HasMaxLength(FreeTextLength);
+        builder.Property(l => l.UniversityPriority).HasMaxLength(CodeLength);
+        builder.Property(l => l.NextStep).HasMaxLength(16);
 
         // Mapped to PostgreSQL text[] so the list can be filtered by country
         builder.Property(l => l.TargetCountries).IsRequired();
