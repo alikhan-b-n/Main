@@ -1,0 +1,89 @@
+# IconicU CRM: database, API, Telegram bot and the web frontend.
+#
+#   cd deploy && cp .env.docker.example .env && nano .env
+#   docker compose -f docker-compose.yml -f docker-compose.tls.yml up -d --build
+#
+# Build contexts default to three repositories checked out side by side:
+#   /opt/iconicu/Main  /opt/iconicu/lama-crm-redesign  /opt/iconicu/IconicUTelegramBot
+# Override with API_CONTEXT / WEB_CONTEXT / BOT_CONTEXT in .env.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-LamaCRM}
+      POSTGRES_USER: ${POSTGRES_USER:-iconicu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # No published port: the database is reachable only inside the compose network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-iconicu} -d ${POSTGRES_DB:-LamaCRM}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ${API_CONTEXT:-../../Main}
+      dockerfile: Lama.Api/Dockerfile
+    image: iconicu/api:${TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: >-
+        Host=db;Port=5432;Database=${POSTGRES_DB:-LamaCRM};Username=${POSTGRES_USER:-iconicu};Password=${POSTGRES_PASSWORD}
+      # The API applies pending migrations itself, so the schema follows the code
+      Database__MigrateOnStartup: "true"
+      # Browser origin of the CRM; must match how people open it
+      Cors__AllowedOrigins__0: ${PUBLIC_URL:?set PUBLIC_URL in .env}
+      Auth__Jwt__Key: ${JWT_KEY:?set JWT_KEY in .env}
+      Auth__Jwt__ExpiresHours: ${JWT_EXPIRES_HOURS:-12}
+      Auth__Admin__Email: ${ADMIN_EMAIL:?set ADMIN_EMAIL in .env}
+      Auth__Admin__Password: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
+      Auth__Admin__FullName: ${ADMIN_NAME:-IconicU Admin}
+      Integrations__TelegramBot__ApiKey: ${CRM_API_KEY:?set CRM_API_KEY in .env}
+    expose:
+      - "8080"
+
+  bot:
+    build:
+      context: ${BOT_CONTEXT:-../../IconicUTelegramBot}
+    image: iconicu/bot:${TAG:-latest}
+    # Telegram allows one poller per token — never scale this service above 1
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN:?set BOT_TOKEN in .env}
+      # Inside the compose network the API is reachable by service name
+      CRM_WEBHOOK_URL: http://api:8080/api/integrations/telegram/leads
+      CRM_API_KEY: ${CRM_API_KEY}
+      BOOKING_URL: ${BOOKING_URL:-}
+      CONSULTATION_URL: ${CONSULTATION_URL:-}
+      CHANNEL_URL: ${CHANNEL_URL:-}
+      ADMIN_CHAT_ID: ${ADMIN_CHAT_ID:-}
+      LEADS_FILE: /data/leads.jsonl
+    volumes:
+      - botdata:/data
+
+  web:
+    build:
+      context: ${WEB_CONTEXT:-../../lama-crm-redesign}
+    image: iconicu/web:${TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      - api
+    # Not published here on purpose: pick an override that decides how the CRM is exposed.
+    #   docker-compose.http.yml — plain HTTP on HTTP_PORT (local checks only)
+    #   docker-compose.tls.yml  — Caddy with a Let's Encrypt certificate (production)
+    expose:
+      - "80"
+
+volumes:
+  pgdata:
+  botdata:

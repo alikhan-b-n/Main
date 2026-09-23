@@ -1,0 +1,20 @@
+# TLS termination for the CRM. Caddy issues and renews the certificate itself.
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode gzip
+
+	# The CRM holds personal data: keep it out of search engines and frames
+	header {
+		X-Frame-Options DENY
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+		X-Robots-Tag "noindex, nofollow"
+		Strict-Transport-Security "max-age=31536000"
+	}
+
+	# The web container serves the SPA and proxies /api to the API
+	reverse_proxy web:80
+}

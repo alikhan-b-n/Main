@@ -21,3 +21,6 @@ riderModule.iml
 *.user
 *.userosscache
 *.sln.docstates
+# Docker compose secrets
+deploy/.env
+.env
