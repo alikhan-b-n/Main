@@ -12,6 +12,7 @@ consultation funnel.
 | Application | `Lama.Application/LeadManagement` — submit / status / note / delete commands, list / details / stats queries, validators |
 | Infrastructure | `LeadRepository`, `LeadConfiguration`, migration `AddLeads` (tables `Leads`, `LeadEvents`) |
 | API | `TelegramLeadsController` (bot intake), `LeadsController` (UI), `TelegramBotApiKeyFilter` |
+| Access control | `Lama.Domain/AccessControl`, `Lama.Application/AccessControl`, `AuthController`, `UsersController` |
 | Tests | `Lama.Tests` (xUnit) |
 
 Qualification fields store the bot's option codes (`master`, `3000_5000`, `de`...), not text —
@@ -46,6 +47,48 @@ dotnet user-secrets set "Integrations:TelegramBot:ApiKey" "<long random string>"
 or the environment variable `Integrations__TelegramBot__ApiKey`. Put the same value into the
 bot's `.env` as `CRM_API_KEY`, and point `CRM_WEBHOOK_URL` at the endpoint above.
 
+## Sign-in and users
+
+Everything except the bot intake and `POST /api/auth/login` requires a signed-in user:
+the API issues a JWT on sign-in and the SPA sends it as `Authorization: Bearer <token>`.
+Accounts are created by an administrator inside the CRM — there is no sign-up.
+
+Roles: **Admin** (everything, including `/api/users`) and **Manager** (leads and contacts).
+The last active administrator cannot be deleted, demoted or deactivated, and an administrator
+cannot remove their own access.
+
+The administrator account and the token signing key come from configuration, so they never
+reach the repository:
+
+```bash
+dotnet user-secrets set "Auth:Admin:Email" "you@iconicu.kz" --project Lama.Api
+```
+
+```bash
+dotnet user-secrets set "Auth:Admin:Password" "<at least 8 characters>" --project Lama.Api
+```
+
+```bash
+dotnet user-secrets set "Auth:Jwt:Key" "<random 32+ characters>" --project Lama.Api
+```
+
+On startup the account is created if missing, and realigned if the secret changed (password,
+role or a disabled flag). Change the admin password by updating the secret and restarting,
+or from the admin panel itself. Without `Auth:Jwt:Key` the API signs tokens with a random key,
+so everyone is signed out on restart; without the admin secrets nobody can sign in at all.
+
+| Method | Path | |
+|---|---|---|
+| POST | `/api/auth/login` | email + password → token |
+| GET | `/api/auth/me` | current user |
+| POST | `/api/auth/password` | change own password |
+| GET/POST | `/api/users` | list / create (Admin) |
+| PUT | `/api/users/{id}` | name, role, access (Admin) |
+| POST | `/api/users/{id}/password` | set a new password (Admin) |
+| DELETE | `/api/users/{id}` | (Admin) |
+
+Passwords are stored as PBKDF2-HMAC-SHA256 hashes (210 000 iterations, random salt per password).
+
 ## UI endpoints
 
 | Method | Path | |
@@ -57,8 +100,7 @@ bot's `.env` as `CRM_API_KEY`, and point `CRM_WEBHOOK_URL` at the endpoint above
 | POST | `/api/leads/{id}/notes` | `{ "text": "..." }` |
 | DELETE | `/api/leads/{id}` | |
 
-These, like the rest of the CRM, have no authentication yet — do not expose the API publicly
-before adding it.
+These require a signed-in user (any role).
 
 ## Database
 

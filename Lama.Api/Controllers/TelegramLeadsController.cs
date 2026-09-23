@@ -3,6 +3,7 @@ using Lama.Api.Integrations.TelegramBot;
 using Lama.Api.Leads;
 using Lama.Application.LeadManagement.Commands;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lama.Api.Controllers;
@@ -10,6 +11,8 @@ namespace Lama.Api.Controllers;
 /// <summary>Intake for completed surveys from the IconicU Telegram bot.</summary>
 [ApiController]
 [Route("api/integrations/telegram/leads")]
+// The bot has no user session: it authenticates with its own API key (TelegramBotApiKeyFilter)
+[AllowAnonymous]
 [TypeFilter(typeof(TelegramBotApiKeyFilter))]
 [TypeFilter(typeof(LeadExceptionFilter))]
 public class TelegramLeadsController : ControllerBase

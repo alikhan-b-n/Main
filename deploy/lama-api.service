@@ -1,0 +1,33 @@
+[Unit]
+Description=IconicU CRM API (.NET)
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=notify
+WorkingDirectory=/opt/iconicu/api
+ExecStart=/usr/bin/dotnet /opt/iconicu/api/Lama.Api.dll
+Restart=always
+RestartSec=5
+KillSignal=SIGINT
+SyslogIdentifier=lama-api
+User=iconicu
+Group=iconicu
+
+Environment=ASPNETCORE_ENVIRONMENT=Production
+# Listens on localhost only: nginx is the only way in from outside
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5185
+Environment=DOTNET_NOLOGO=1
+
+# Secrets and the connection string come from this file (chmod 600, owned by iconicu)
+EnvironmentFile=/etc/iconicu/api.env
+
+# Hardening: the service only needs its own directory
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/iconicu/api/logs
+
+[Install]
+WantedBy=multi-user.target

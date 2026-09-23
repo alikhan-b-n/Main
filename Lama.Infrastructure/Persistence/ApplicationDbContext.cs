@@ -4,6 +4,7 @@ using Lama.Domain.SalesManagement.Entities;
 using Lama.Domain.ActivityManagement.Entities;
 using Lama.Domain.UserManagement.Entities;
 using Lama.Domain.LeadManagement.Entities;
+using Lama.Domain.AccessControl.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lama.Infrastructure.Persistence;
@@ -31,6 +32,9 @@ public class ApplicationDbContext : DbContext
     // Lead Management (IconicU Telegram bot intake)
     public DbSet<Lead> Leads => Set<Lead>();
     public DbSet<LeadEvent> LeadEvents => Set<LeadEvent>();
+
+    // Access control (who can sign in to the CRM)
+    public DbSet<CrmUser> CrmUsers => Set<CrmUser>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -82,6 +86,14 @@ public class ApplicationDbContext : DbContext
             .OwnsOne(c => c.PhoneNumber, phone =>
             {
                 phone.Property(p => p.Value).HasColumnName("PhoneNumber").HasMaxLength(50);
+            });
+
+        // Email value object for CrmUser — unique, one account per address
+        modelBuilder.Entity<CrmUser>()
+            .OwnsOne(u => u.Email, email =>
+            {
+                email.Property(e => e.Value).HasColumnName("Email").HasMaxLength(255).IsRequired();
+                email.HasIndex(e => e.Value).IsUnique();
             });
 
         // Email value object for Lead

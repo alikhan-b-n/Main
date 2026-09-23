@@ -1,7 +1,9 @@
 using Lama.Application.Common;
+using Lama.Application.AccessControl;
 using Lama.Application.LeadManagement;
 using Lama.Infrastructure.Persistence;
 using Lama.Infrastructure.Repositories;
+using Lama.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +32,12 @@ public static class DependencyInjection
         // Register repositories as scoped for EF Core
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
         services.AddScoped<ILeadRepository, LeadRepository>();
+
+        // Access control: users, password hashing and the administrator from configuration
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
+        services.Configure<AdminAccountOptions>(configuration.GetSection(AdminAccountOptions.SectionName));
+        services.AddHostedService<AdminAccountSeeder>();
 
         // AI provider defaults from appsettings.json. API keys are NEVER
         // configured here — they always come from the request payload.
