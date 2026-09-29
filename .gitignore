@@ -24,3 +24,8 @@ riderModule.iml
 # Docker compose secrets
 deploy/.env
 .env
+# Google Calendar credentials produced by deploy/get-google-refresh-token.py
+.env.google
+deploy/.env.google
+# Python helper scripts in deploy/
+__pycache__/

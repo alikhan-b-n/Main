@@ -43,7 +43,7 @@ public class Lead : AggregateRoot
 
     /// <summary>
     /// Branch the bot sent the person to: "call" (free intro call), "consultation" (paid €160
-    /// consultation), "potential" (5–7 points, no free call) or "nurture" (Telegram channel).
+    /// consultation), "potential" (5–6 points, no free call) or "nurture" (Telegram channel).
     /// </summary>
     public string? NextStep { get; private set; }
 
@@ -189,10 +189,10 @@ public enum LeadTemperature
 public static class LeadTemperatureRules
 {
     // "Простая квалификация IconicU — 10 баллов", same as the bot's routing.temperature_for():
-    // 8–10 hot (intro call), 5–7 warm (consultation / more qualification), 0–4 cold (channel).
+    // 7–10 hot (intro call), 5–6 warm (consultation / more qualification), 0–4 cold (channel).
     public static LeadTemperature FromScore(int score) => score switch
     {
-        >= 8 => LeadTemperature.Hot,
+        >= 7 => LeadTemperature.Hot,
         >= 5 => LeadTemperature.Warm,
         _ => LeadTemperature.Cold
     };

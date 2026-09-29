@@ -98,7 +98,44 @@ openssl rand -base64 48 && openssl rand -base64 32
 
 `.env` в git не попадает и при обновлении кода не затрагивается.
 
-## 4. Запуск
+## 4. Google Calendar (запись на звонок)
+
+Без этого раздела всё работает, кроме календаря: бот скажет, что менеджер свяжется сам.
+Календарём владеет обычный Gmail-аккаунт, доступ выдаётся один раз.
+
+В [console.cloud.google.com](https://console.cloud.google.com) под этим аккаунтом
+(всё бесплатно, платёжная карта для Calendar API не нужна):
+
+1. Создать проект.
+2. **APIs & Services → Library** → включить **Google Calendar API**.
+3. **OAuth consent screen**: тип External, scope'ы `calendar.events` и `calendar.readonly`,
+   затем **Publish app**. В статусе Testing refresh token живёт 7 дней и запись встанет.
+   Верификация Google не нужна: приложением пользуется один аккаунт.
+4. **Credentials → Create credentials → OAuth client ID → Desktop app**, скачать
+   файл `client_secret_*.json`.
+
+Дальше на своём компьютере (не на сервере — нужен браузер):
+
+```bash
+python deploy/get-google-refresh-token.py путь/к/client_secret_....json
+```
+
+Скрипт откроет окно согласия, поймает ответ и запишет `GOOGLE_CLIENT_ID`,
+`GOOGLE_CLIENT_SECRET` и `GOOGLE_REFRESH_TOKEN` в файл `deploy/.env.google`
+(на экран токен не выводится, в git файл не попадает). Эти три строки и нужно
+скопировать в `deploy/.env` на сервере. Предупреждение «Google hasn't verified
+this app» ожидаемо: **Advanced → Go to ... (unsafe)**.
+
+Чтобы запустить CRM локально с тем же календарём, перенесите значения в user-secrets:
+
+```bash
+powershell -ExecutionPolicy Bypass -File deploy/set-google-secrets.ps1
+```
+
+Расписание (дни, часы, длительность звонка, часовой пояс) правится не здесь,
+а в самой CRM: раздел **Записи → Расписание**, доступ у администратора.
+
+## 5. Запуск
 
 Домен должен уже указывать A-записью на сервер — иначе Caddy не получит сертификат.
 
@@ -127,7 +164,7 @@ docker compose -f docker-compose.yml -f docker-compose.http.yml up -d --build
 
 Так CRM в интернет выставлять нельзя: токен входа пойдёт незашифрованным.
 
-## 5. Бэкапы
+## 6. Бэкапы
 
 ```bash
 sudo install -m 755 deploy/backup-db-docker.sh /usr/local/bin/iconicu-backup && sudo install -d -o $USER -g $USER /var/backups/iconicu
@@ -146,7 +183,7 @@ sudo install -m 755 deploy/backup-db-docker.sh /usr/local/bin/iconicu-backup && 
 gunzip -c /var/backups/iconicu/LamaCRM_ДАТА.sql.gz | docker compose exec -T db psql -U iconicu -d LamaCRM
 ```
 
-## 6. Обновление
+## 7. Обновление
 
 ```bash
 cd /opt/iconicu/Main && git pull && cd ../lama-crm-redesign && git pull && cd ../IconicUTelegramBot && git pull

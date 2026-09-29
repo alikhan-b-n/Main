@@ -47,6 +47,11 @@ services:
       Auth__Admin__Password: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
       Auth__Admin__FullName: ${ADMIN_NAME:-IconicU Admin}
       Integrations__TelegramBot__ApiKey: ${CRM_API_KEY:?set CRM_API_KEY in .env}
+      # Google Calendar: empty values simply switch booking off, the CRM keeps working
+      Integrations__GoogleCalendar__ClientId: ${GOOGLE_CLIENT_ID:-}
+      Integrations__GoogleCalendar__ClientSecret: ${GOOGLE_CLIENT_SECRET:-}
+      Integrations__GoogleCalendar__RefreshToken: ${GOOGLE_REFRESH_TOKEN:-}
+      Integrations__GoogleCalendar__CalendarId: ${GOOGLE_CALENDAR_ID:-primary}
     expose:
       - "8080"
 

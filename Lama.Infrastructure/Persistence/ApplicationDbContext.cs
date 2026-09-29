@@ -5,6 +5,7 @@ using Lama.Domain.ActivityManagement.Entities;
 using Lama.Domain.UserManagement.Entities;
 using Lama.Domain.LeadManagement.Entities;
 using Lama.Domain.AccessControl.Entities;
+using Lama.Domain.Scheduling.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lama.Infrastructure.Persistence;
@@ -35,6 +36,10 @@ public class ApplicationDbContext : DbContext
 
     // Access control (who can sign in to the CRM)
     public DbSet<CrmUser> CrmUsers => Set<CrmUser>();
+
+    // Scheduling (intro calls booked from the bot, mirrored in Google Calendar)
+    public DbSet<Appointment> Appointments => Set<Appointment>();
+    public DbSet<AvailabilitySettings> AvailabilitySettings => Set<AvailabilitySettings>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -27,8 +27,11 @@ public static class DependencyInjection
         // Register all validators from this assembly for FluentValidation
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
-        // Clock abstraction for time-dependent queries (lead stats), swappable in tests
+        // Clock abstraction for time-dependent queries (lead stats, free slots), swappable in tests
         services.TryAddSingleton(TimeProvider.System);
+
+        // Collects busy time from the calendar and from the calls we booked ourselves
+        services.AddScoped<Scheduling.BusyTimeReader>();
 
         return services;
     }
