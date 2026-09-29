@@ -156,6 +156,44 @@ public class CancelAppointmentCommandHandler : ICommandHandler<CancelAppointment
     }
 }
 
+/// <summary>
+/// Отмена по просьбе самого человека из бота. Отдельно от <see cref="CancelAppointmentCommand"/>,
+/// потому что здесь некому доверять: ключ бота общий, поэтому проверяем, что отменяют
+/// именно свою запись.
+/// </summary>
+public record CancelOwnAppointmentCommand(Guid Id, long TelegramId, string? Reason = null) : ICommand;
+
+public class CancelOwnAppointmentCommandHandler : ICommandHandler<CancelOwnAppointmentCommand>
+{
+    private readonly IAppointmentRepository _appointments;
+    private readonly ISchedulingCalendar _calendar;
+
+    public CancelOwnAppointmentCommandHandler(
+        IAppointmentRepository appointments, ISchedulingCalendar calendar)
+    {
+        _appointments = appointments;
+        _calendar = calendar;
+    }
+
+    public async Task Handle(CancelOwnAppointmentCommand command, CancellationToken cancellationToken)
+    {
+        var appointment = await _appointments.GetByIdAsync(command.Id, cancellationToken);
+
+        // Чужую запись не отменяем и не подтверждаем, что она есть
+        if (appointment == null || appointment.TelegramId != command.TelegramId)
+            throw new AppointmentNotFoundException(command.Id);
+
+        if (!appointment.IsActive)
+            return;
+
+        if (appointment.GoogleEventId != null && _calendar.IsConfigured)
+            await _calendar.CancelAsync(appointment.GoogleEventId, cancellationToken);
+
+        appointment.Cancel(command.Reason);
+        await _appointments.SaveChangesAsync(cancellationToken);
+    }
+}
+
 public record RescheduleAppointmentCommand(Guid Id, DateTime StartUtc) : ICommand<AppointmentDto>;
 
 public class RescheduleAppointmentCommandHandler

@@ -59,7 +59,22 @@ public class TelegramSchedulingController : ControllerBase
 
         return StatusCode(StatusCodes.Status201Created, result);
     }
+
+    /// <summary>
+    /// Человек отменяет свою запись из бота: например, чтобы записаться заново
+    /// с исправленной почтой. Чужую запись отменить нельзя — сверяем Telegram id.
+    /// </summary>
+    [HttpPost("appointments/{id:guid}/cancel")]
+    public async Task<IActionResult> Cancel(
+        Guid id, [FromBody] TelegramCancelRequest request, CancellationToken cancellationToken)
+    {
+        await _mediator.Send(
+            new CancelOwnAppointmentCommand(id, request.TelegramId, request.Reason), cancellationToken);
+        return NoContent();
+    }
 }
+
+public record TelegramCancelRequest(long TelegramId, string? Reason);
 
 /// <summary>
 /// <see cref="StartUtc"/> is a slot start exactly as the API handed it out.
