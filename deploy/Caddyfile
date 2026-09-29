@@ -18,3 +18,9 @@
 	# The web container serves the SPA and proxies /api to the API
 	reverse_proxy web:80
 }
+
+# Other things hosted on the same server get a *.caddy file in deploy/conf.d.
+# That folder is not tracked, so those sites survive a git pull and stay out of
+# this repository. A service that publishes a port on the host is reached as
+# host.docker.internal:<port>.
+import /etc/caddy/conf.d/*.caddy

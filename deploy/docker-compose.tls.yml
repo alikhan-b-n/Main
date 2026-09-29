@@ -4,6 +4,7 @@
 #   docker compose -f docker-compose.yml -f docker-compose.tls.yml up -d
 #
 # The web container is never published directly; everything goes through Caddy.
+# Other services on the same box get their own file in deploy/conf.d (see Caddyfile).
 
 services:
   caddy:
@@ -18,8 +19,12 @@ services:
       DOMAIN: ${DOMAIN:?set DOMAIN in .env}
       # Let's Encrypt notifies this address about expiring certificates
       ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in .env}
+    # Lets a site in conf.d reach a service that publishes a port on the host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./conf.d:/etc/caddy/conf.d:ro
       - caddy_data:/data
       - caddy_config:/config
 

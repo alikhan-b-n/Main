@@ -29,3 +29,6 @@ deploy/.env
 deploy/.env.google
 # Python helper scripts in deploy/
 __pycache__/
+# Sites of other projects on the same server
+deploy/conf.d/*
+!deploy/conf.d/.gitkeep
