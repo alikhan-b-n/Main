@@ -28,7 +28,9 @@ public class LeadRepository : ILeadRepository
 
         return _context.Leads
             .Include(l => l.Events)
-            .Where(l => l.Status != LeadStatus.ContractSigned && l.Status != LeadStatus.Lost)
+            .Where(l => l.Status != LeadStatus.ContractSigned
+                        && l.Status != LeadStatus.Lost
+                        && l.Status != LeadStatus.Ignored)
             .Where(l => (telegramId != null && l.TelegramId == telegramId)
                         || l.Email.Value.ToLower() == normalizedEmail)
             .OrderByDescending(l => l.CreatedAt)

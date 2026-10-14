@@ -61,7 +61,8 @@ public class Lead : AggregateRoot
     private readonly List<LeadEvent> _events = new();
     public IReadOnlyCollection<LeadEvent> Events => _events.AsReadOnly();
 
-    public bool IsOpen => Status is not (LeadStatus.ContractSigned or LeadStatus.Lost);
+    public bool IsOpen =>
+        Status is not (LeadStatus.ContractSigned or LeadStatus.Lost or LeadStatus.Ignored);
 
     // Required members are populated by EF when loading, or by ApplySubmission in Create.
     private Lead()
@@ -176,7 +177,13 @@ public enum LeadStatus
     ConsultationScheduled,
     ConsultationDone,
     ContractSigned,
-    Lost
+    Lost,
+    /// <summary>
+    /// Spam, a wrong number, a duplicate someone filled in twice — not a deal that was
+    /// lost, just noise. Kept out of the funnel and out of the conversion rate, because
+    /// counting it as lost would make the numbers look worse than the work was.
+    /// </summary>
+    Ignored
 }
 
 public enum LeadTemperature

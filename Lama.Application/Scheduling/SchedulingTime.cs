@@ -44,7 +44,18 @@ public static class SchedulingTime
             ? "IconicU: стратегическая консультация"
             : "IconicU: ознакомительный звонок";
 
-        var lines = new List<string> { $"Заявка из Telegram-бота IconicU.", string.Empty, $"Имя: {appointment.FullName}", $"Email: {appointment.Email.Value}" };
+        // A call booked by a manager did not come from the bot; say so in the invitation
+        var origin = appointment.TelegramId.HasValue
+            ? "Заявка из Telegram-бота IconicU."
+            : "Запись добавлена вручную в CRM.";
+
+        var lines = new List<string>
+        {
+            origin,
+            string.Empty,
+            $"Имя: {appointment.FullName}",
+            $"Email: {appointment.Email.Value}",
+        };
         if (appointment.Phone != null)
             lines.Add($"Телефон: {appointment.Phone}");
         if (appointment.TelegramUsername != null)

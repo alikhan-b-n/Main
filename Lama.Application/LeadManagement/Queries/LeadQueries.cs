@@ -97,7 +97,11 @@ public static class LeadStatsCalculator
         var weekAgo = nowUtc.AddDays(-7);
         var twoWeeksAgo = nowUtc.AddDays(-14);
 
-        var open = rows.Where(r => r.Status is not (LeadStatus.ContractSigned or LeadStatus.Lost)).ToList();
+        // Ignored leads are noise, not work: they count in the total and in the funnel,
+        // but never as open and never against the conversion rate.
+        var open = rows
+            .Where(r => r.Status is not (LeadStatus.ContractSigned or LeadStatus.Lost or LeadStatus.Ignored))
+            .ToList();
         var signed = rows.Count(r => r.Status == LeadStatus.ContractSigned);
         var lost = rows.Count(r => r.Status == LeadStatus.Lost);
         var closed = signed + lost;

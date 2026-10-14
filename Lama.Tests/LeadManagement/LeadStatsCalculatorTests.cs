@@ -32,6 +32,30 @@ public class LeadStatsCalculatorTests
     }
 
     [Fact]
+    public void IgnoredLeadsAreNeitherOpenNorHeldAgainstTheConversion()
+    {
+        var rows = new[]
+        {
+            Row(LeadStatus.New, LeadTemperature.Hot),
+            Row(LeadStatus.ContractSigned, LeadTemperature.Hot, daysAgo: 10),
+            Row(LeadStatus.Lost, LeadTemperature.Cold, daysAgo: 12),
+            // Spam and wrong numbers: they happened, but they are not work in progress
+            Row(LeadStatus.Ignored, LeadTemperature.Cold, daysAgo: 2),
+            Row(LeadStatus.Ignored, LeadTemperature.Hot, daysAgo: 3),
+        };
+
+        var stats = LeadStatsCalculator.Calculate(rows, Now);
+
+        Assert.Equal(5, stats.Total);
+        // Only the new one is open — the two ignored ones are not
+        Assert.Equal(1, stats.Open);
+        Assert.Equal(1, stats.HotOpen);
+        // One signed out of one signed plus one lost; the ignored pair stays out of it
+        Assert.Equal(50, stats.ConversionRate);
+        Assert.Equal(2, stats.ByStatus.Single(s => s.Key == "Ignored").Count);
+    }
+
+    [Fact]
     public void CountsFunnelWeeksAndConversion()
     {
         var rows = new[]
