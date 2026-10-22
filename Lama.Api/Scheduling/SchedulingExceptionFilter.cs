@@ -34,6 +34,13 @@ public class SchedulingExceptionFilter : IExceptionFilter
                 context.Result = new ConflictObjectResult(new { message = taken.Message, code = "slot_taken" });
                 break;
 
+            case LeadNotEligibleException notHot:
+                context.Result = new ObjectResult(new { message = notHot.Message, code = "lead_not_hot" })
+                {
+                    StatusCode = StatusCodes.Status403Forbidden
+                };
+                break;
+
             case BookingDisabledException disabled:
                 context.Result = new ObjectResult(new { message = disabled.Message, code = "booking_disabled" })
                 {

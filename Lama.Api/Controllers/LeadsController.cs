@@ -65,6 +65,26 @@ public class LeadsController : ControllerBase
         return lead == null ? NotFound() : Ok(lead);
     }
 
+    /// <summary>A lead typed in by a manager. 409 with the existing lead's id when the email is taken.</summary>
+    [HttpPost]
+    public async Task<ActionResult<LeadDetailsDto>> CreateLead([FromBody] CreateLeadRequest request, CancellationToken cancellationToken)
+    {
+        if (!TryParseOptional<LeadTemperature>(request.Temperature, out var temperature))
+            return BadRequest(new { message = $"Invalid temperature: {request.Temperature}. Valid values: {string.Join(", ", Enum.GetNames<LeadTemperature>())}" });
+
+        var id = await _mediator.Send(new CreateLeadCommand(
+            request.FullName,
+            request.Email,
+            request.Phone,
+            request.TelegramUsername,
+            request.Source,
+            temperature ?? LeadTemperature.Warm,
+            request.Comment), cancellationToken);
+
+        var lead = await _mediator.Send(new GetLeadByIdQuery(id), cancellationToken);
+        return CreatedAtAction(nameof(GetLead), new { id }, lead);
+    }
+
     [HttpPatch("{id:guid}/status")]
     public async Task<IActionResult> ChangeStatus(Guid id, [FromBody] ChangeLeadStatusRequest request, CancellationToken cancellationToken)
     {
@@ -101,6 +121,15 @@ public class LeadsController : ControllerBase
         return true;
     }
 }
+
+public record CreateLeadRequest(
+    string FullName,
+    string Email,
+    string? Phone,
+    string? TelegramUsername,
+    string? Source,
+    string? Temperature,
+    string? Comment);
 
 public record ChangeLeadStatusRequest(string Status, string? LostReason);
 

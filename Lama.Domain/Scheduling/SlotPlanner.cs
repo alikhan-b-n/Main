@@ -33,9 +33,8 @@ public static class SlotPlanner
     {
         ArgumentNullException.ThrowIfNull(settings);
 
-        if (!settings.Enabled)
-            return Array.Empty<SlotDay>();
-
+        // The on/off switch is not checked here: it closes the calendar to the bot only,
+        // and the callers know whether the bot or a manager is asking
         var zone = settings.TimeZone();
         var nowUtc = now.UtcDateTime;
         var earliestUtc = nowUtc.AddHours(settings.MinLeadTimeHours);

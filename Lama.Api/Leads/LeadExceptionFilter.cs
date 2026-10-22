@@ -1,5 +1,6 @@
 using FluentValidation;
 using Lama.Application.LeadManagement;
+using Lama.Application.LeadManagement.Commands;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -28,6 +29,16 @@ public class LeadExceptionFilter : IExceptionFilter
 
             case LeadNotFoundException notFound:
                 context.Result = new NotFoundObjectResult(new { message = notFound.Message });
+                context.ExceptionHandled = true;
+                break;
+
+            case DuplicateLeadException duplicate:
+                context.Result = new ConflictObjectResult(new
+                {
+                    message = duplicate.Message,
+                    code = "duplicate_lead",
+                    leadId = duplicate.ExistingLeadId
+                });
                 context.ExceptionHandled = true;
                 break;
 

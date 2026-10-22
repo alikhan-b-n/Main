@@ -39,7 +39,8 @@ public class TelegramSchedulingController : ControllerBase
         Ok(await _mediator.Send(new GetDaySlotsQuery(date), cancellationToken));
 
     /// <summary>
-    /// 201 with the Meet link, 409 when the slot was taken while the person was choosing,
+    /// 201 with the Meet link, 403 when the lead is missing or not hot,
+    /// 409 when the slot was taken while the person was choosing,
     /// 503 when booking is off or Google is unreachable.
     /// </summary>
     [HttpPost("book")]
@@ -55,7 +56,8 @@ public class TelegramSchedulingController : ControllerBase
             request.TelegramUsername,
             request.TelegramId,
             AppointmentKind.IntroCall,
-            request.Comment), cancellationToken);
+            request.Comment,
+            FromBot: true), cancellationToken);
 
         return StatusCode(StatusCodes.Status201Created, result);
     }
@@ -78,7 +80,8 @@ public record TelegramCancelRequest(long TelegramId, string? Reason);
 
 /// <summary>
 /// <see cref="StartUtc"/> is a slot start exactly as the API handed it out.
-/// <see cref="LeadId"/> is the CRM id from the intake response, when the bot has it.
+/// <see cref="LeadId"/> is the CRM id from the intake response; without it the booking is refused,
+/// because only a lead the CRM knows to be hot may book.
 /// </summary>
 public record TelegramBookingRequest(
     Guid? LeadId,

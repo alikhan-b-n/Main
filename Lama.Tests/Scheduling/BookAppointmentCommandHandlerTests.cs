@@ -102,13 +102,32 @@ public class BookAppointmentCommandHandlerTests
     }
 
     [Fact]
-    public async Task BookingIsRefusedWhileItIsSwitchedOff()
+    public async Task TheBotCannotBookWhileBookingIsSwitchedOff()
     {
-        _settings.Settings = AvailabilitySettings.Create(
-            false, "Europe/London", 30, 24, 14, 0, Array.Empty<WorkingWindow>());
+        var lead = AddLead(LeadTemperature.Hot);
+        SwitchBookingOff();
 
-        await Assert.ThrowsAsync<BookingDisabledException>(() => Book());
+        await Assert.ThrowsAsync<BookingDisabledException>(() => BookFromBot(lead.Id));
         Assert.Empty(_calendar.Created);
+    }
+
+    [Fact]
+    public async Task AManagerStillBooksWhileBookingIsSwitchedOff()
+    {
+        SwitchBookingOff();
+
+        await Book();
+
+        Assert.Single(_appointments.Appointments);
+    }
+
+    /// <summary>Off, but with the default working hours, so the slot itself is fine.</summary>
+    private void SwitchBookingOff()
+    {
+        var defaults = AvailabilitySettings.Default();
+        _settings.Settings = AvailabilitySettings.Create(
+            false, defaults.TimeZoneId, defaults.SlotMinutes, defaults.MinLeadTimeHours,
+            defaults.MaxDaysAhead, defaults.BufferMinutes, defaults.Windows);
     }
 
     [Fact]
@@ -181,5 +200,57 @@ public class BookAppointmentCommandHandlerTests
         Assert.NotEqual(Guid.Empty, result.AppointmentId);
         Assert.Null(Assert.Single(_appointments.Appointments).LeadId);
         Assert.Equal(0, _leads.SaveCount);
+    }
+
+    private Task<BookAppointmentResult> BookFromBot(Guid? leadId) =>
+        _handler.Handle(new BookAppointmentCommand(
+            leadId, "Dana Serik", "dana@example.kz", Slot(), TelegramId: 42, FromBot: true),
+            CancellationToken.None);
+
+    private Lead AddLead(LeadTemperature temperature)
+    {
+        var lead = Lead.Create(LeadSamples.Submission() with { Temperature = temperature });
+        _leads.Leads.Add(lead);
+        return lead;
+    }
+
+    [Fact]
+    public async Task AHotLeadBooksFromTheBot()
+    {
+        var lead = AddLead(LeadTemperature.Hot);
+
+        await BookFromBot(lead.Id);
+
+        Assert.Equal(lead.Id, Assert.Single(_appointments.Appointments).LeadId);
+    }
+
+    [Theory]
+    [InlineData(LeadTemperature.Warm)]
+    [InlineData(LeadTemperature.Cold)]
+    public async Task ALeadThatIsNotHotCannotBookFromTheBot(LeadTemperature temperature)
+    {
+        var lead = AddLead(temperature);
+
+        await Assert.ThrowsAsync<LeadNotEligibleException>(() => BookFromBot(lead.Id));
+        Assert.Empty(_appointments.Appointments);
+        Assert.Empty(_calendar.Created);
+    }
+
+    [Fact]
+    public async Task TheBotCannotBookWithoutAKnownLead()
+    {
+        await Assert.ThrowsAsync<LeadNotEligibleException>(() => BookFromBot(null));
+        await Assert.ThrowsAsync<LeadNotEligibleException>(() => BookFromBot(Guid.NewGuid()));
+        Assert.Empty(_appointments.Appointments);
+    }
+
+    [Fact]
+    public async Task AManagerCanBookALeadThatIsNotHot()
+    {
+        var lead = AddLead(LeadTemperature.Cold);
+
+        await Book(leadId: lead.Id);
+
+        Assert.Single(_appointments.Appointments);
     }
 }

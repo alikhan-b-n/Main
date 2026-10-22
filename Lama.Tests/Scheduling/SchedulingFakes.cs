@@ -129,7 +129,9 @@ public sealed class FakeLeadRepository : ILeadRepository
 
     public Task<Lead?> FindOpenDuplicateAsync(
         long? telegramId, string email, CancellationToken cancellationToken = default) =>
-        Task.FromResult<Lead?>(null);
+        Task.FromResult(Leads.FirstOrDefault(l => l.IsOpen
+            && ((telegramId != null && l.TelegramId == telegramId)
+                || string.Equals(l.Email.Value, email.Trim(), StringComparison.OrdinalIgnoreCase))));
 
     public Task<PagedResult<Lead>> SearchAsync(LeadFilter filter, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException();

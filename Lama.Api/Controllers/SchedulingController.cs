@@ -48,11 +48,11 @@ public class SchedulingController : ControllerBase
 
     [HttpGet("availability")]
     public async Task<ActionResult<AvailabilityDto>> GetAvailability(CancellationToken cancellationToken) =>
-        Ok(await _mediator.Send(new GetAvailabilityQuery(), cancellationToken));
+        Ok(await _mediator.Send(new GetAvailabilityQuery(ForStaff: true), cancellationToken));
 
     [HttpGet("availability/{date}")]
     public async Task<ActionResult<DaySlotsDto>> GetDay(DateOnly date, CancellationToken cancellationToken) =>
-        Ok(await _mediator.Send(new GetDaySlotsQuery(date), cancellationToken));
+        Ok(await _mediator.Send(new GetDaySlotsQuery(date, ForStaff: true), cancellationToken));
 
     // --- Appointments -------------------------------------------------------
 

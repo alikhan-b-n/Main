@@ -122,9 +122,12 @@ public class SlotPlannerTests
     }
 
     [Fact]
-    public void Plan_ReturnsNothingWhenBookingIsOff()
+    public void Plan_IgnoresTheOnOffSwitch()
     {
-        Assert.Empty(SlotPlanner.Plan(Settings(enabled: false), Array.Empty<BusyInterval>(), Now));
+        // The switch closes the calendar to the bot only; the queries apply it, not the planner
+        Assert.Equal(
+            SlotPlanner.Plan(Settings(), Array.Empty<BusyInterval>(), Now).Count,
+            SlotPlanner.Plan(Settings(enabled: false), Array.Empty<BusyInterval>(), Now).Count);
     }
 
     [Fact]

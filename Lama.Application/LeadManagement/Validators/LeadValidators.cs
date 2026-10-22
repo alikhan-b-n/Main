@@ -61,6 +61,27 @@ public class SubmitTelegramLeadCommandValidator : AbstractValidator<SubmitTelegr
     }
 }
 
+public class CreateLeadCommandValidator : AbstractValidator<CreateLeadCommand>
+{
+    public CreateLeadCommandValidator()
+    {
+        RuleFor(x => x.FullName)
+            .NotEmpty().WithMessage("Full name is required")
+            .MaximumLength(100);
+
+        RuleFor(x => x.Email)
+            .NotEmpty().WithMessage("Email is required")
+            .EmailAddress().WithMessage("Email must be a valid email address")
+            .MaximumLength(255);
+
+        RuleFor(x => x.Phone).MaximumLength(20);
+        RuleFor(x => x.TelegramUsername).MaximumLength(64);
+        RuleFor(x => x.Source).MaximumLength(64);
+        RuleFor(x => x.Temperature).IsInEnum();
+        RuleFor(x => x.Comment).MaximumLength(LeadEvent.MaxTextLength);
+    }
+}
+
 public class ChangeLeadStatusCommandValidator : AbstractValidator<ChangeLeadStatusCommand>
 {
     public ChangeLeadStatusCommandValidator()

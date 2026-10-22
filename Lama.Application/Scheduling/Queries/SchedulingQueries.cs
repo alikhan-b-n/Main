@@ -4,8 +4,12 @@ using Lama.Domain.Scheduling;
 
 namespace Lama.Application.Scheduling.Queries;
 
-/// <summary>Open days with the number of free slots — the first screen of the bot's calendar.</summary>
-public record GetAvailabilityQuery : IQuery<AvailabilityDto>;
+/// <summary>
+/// Open days with the number of free slots — the first screen of the bot's calendar.
+/// <see cref="ForStaff"/> keeps the slots coming while online booking is switched off,
+/// because that switch only takes the bot off the calendar, not the managers.
+/// </summary>
+public record GetAvailabilityQuery(bool ForStaff = false) : IQuery<AvailabilityDto>;
 
 public class GetAvailabilityQueryHandler : IQueryHandler<GetAvailabilityQuery, AvailabilityDto>
 {
@@ -24,7 +28,7 @@ public class GetAvailabilityQueryHandler : IQueryHandler<GetAvailabilityQuery, A
     public async Task<AvailabilityDto> Handle(GetAvailabilityQuery query, CancellationToken cancellationToken)
     {
         var settings = await _settings.GetAsync(cancellationToken);
-        if (!settings.Enabled)
+        if (!settings.Enabled && !query.ForStaff)
             return new AvailabilityDto(false, settings.TimeZoneId, settings.SlotMinutes, Array.Empty<AvailabilityDayDto>());
 
         var now = _clock.GetUtcNow();
@@ -35,12 +39,12 @@ public class GetAvailabilityQueryHandler : IQueryHandler<GetAvailabilityQuery, A
             .Select(day => new AvailabilityDayDto(day.Date, day.FreeCount, day.Slots.Count))
             .ToList();
 
-        return new AvailabilityDto(true, settings.TimeZoneId, settings.SlotMinutes, days);
+        return new AvailabilityDto(settings.Enabled, settings.TimeZoneId, settings.SlotMinutes, days);
     }
 }
 
-/// <summary>Every slot of one day, free and taken alike.</summary>
-public record GetDaySlotsQuery(DateOnly Date) : IQuery<DaySlotsDto>;
+/// <summary>Every slot of one day, free and taken alike. <see cref="ForStaff"/> as above.</summary>
+public record GetDaySlotsQuery(DateOnly Date, bool ForStaff = false) : IQuery<DaySlotsDto>;
 
 public class GetDaySlotsQueryHandler : IQueryHandler<GetDaySlotsQuery, DaySlotsDto>
 {
@@ -60,7 +64,7 @@ public class GetDaySlotsQueryHandler : IQueryHandler<GetDaySlotsQuery, DaySlotsD
     {
         var settings = await _settings.GetAsync(cancellationToken);
         var empty = new DaySlotsDto(query.Date, settings.TimeZoneId, settings.SlotMinutes, Array.Empty<SlotDto>());
-        if (!settings.Enabled)
+        if (!settings.Enabled && !query.ForStaff)
             return empty;
 
         var now = _clock.GetUtcNow();

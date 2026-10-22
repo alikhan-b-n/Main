@@ -110,3 +110,14 @@ public class BookingDisabledException : Exception
     {
     }
 }
+
+/// <summary>Only hot leads may book the intro call themselves; this one is not (or is unknown).</summary>
+public class LeadNotEligibleException : Exception
+{
+    public LeadNotEligibleException(Guid? leadId)
+        : base(leadId == null
+            ? "Booking from the bot needs the lead id"
+            : $"Lead {leadId} is not hot, so it cannot book the intro call")
+    {
+    }
+}

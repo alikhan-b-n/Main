@@ -6,7 +6,11 @@ using Lama.Domain.Scheduling.Entities;
 
 namespace Lama.Application.Scheduling.Commands;
 
-/// <summary>Someone picked a time in the bot (or a manager did it for them in the CRM).</summary>
+/// <summary>
+/// Someone picked a time in the bot (or a manager did it for them in the CRM).
+/// <see cref="FromBot"/> applies the bot's rules: online booking must be switched on and the
+/// lead must be hot. A manager is trusted with both, so the switch never locks the CRM out.
+/// </summary>
 public record BookAppointmentCommand(
     Guid? LeadId,
     string FullName,
@@ -16,7 +20,8 @@ public record BookAppointmentCommand(
     string? TelegramUsername = null,
     long? TelegramId = null,
     AppointmentKind Kind = AppointmentKind.IntroCall,
-    string? Comment = null) : ICommand<BookAppointmentResult>;
+    string? Comment = null,
+    bool FromBot = false) : ICommand<BookAppointmentResult>;
 
 public record BookAppointmentResult(
     Guid AppointmentId,
@@ -55,8 +60,12 @@ public class BookAppointmentCommandHandler : ICommandHandler<BookAppointmentComm
         BookAppointmentCommand command, CancellationToken cancellationToken)
     {
         var settings = await _settings.GetAsync(cancellationToken);
-        if (!settings.Enabled)
-            throw new BookingDisabledException();
+        if (command.FromBot)
+        {
+            if (!settings.Enabled)
+                throw new BookingDisabledException();
+            await EnsureHotLeadAsync(command.LeadId, cancellationToken);
+        }
 
         var startUtc = SchedulingTime.AsUtc(command.StartUtc);
         var busy = await _busy.ReadAsync(startUtc.AddDays(-1), startUtc.AddDays(1), cancellationToken);
@@ -98,6 +107,20 @@ public class BookAppointmentCommandHandler : ICommandHandler<BookAppointmentComm
             appointment.TimeZoneId,
             SchedulingTime.Local(appointment),
             appointment.MeetUrl);
+    }
+
+    /// <summary>
+    /// The bot offers the call only to hot leads; checking it here too means a bot bug or a
+    /// stray request with the shared key cannot fill the calendar with cold ones.
+    /// </summary>
+    private async Task EnsureHotLeadAsync(Guid? leadId, CancellationToken cancellationToken)
+    {
+        if (leadId is not { } id)
+            throw new LeadNotEligibleException(null);
+
+        var lead = await _leads.GetByIdAsync(id, cancellationToken);
+        if (lead?.Temperature != LeadTemperature.Hot)
+            throw new LeadNotEligibleException(id);
     }
 
     private async Task CancelPreviousAsync(Guid leadId, CancellationToken cancellationToken)
@@ -225,9 +248,8 @@ public class RescheduleAppointmentCommandHandler
         var appointment = await _appointments.GetByIdAsync(command.Id, cancellationToken)
                           ?? throw new AppointmentNotFoundException(command.Id);
 
+        // Only managers reschedule, so the bot's on/off switch does not apply here
         var settings = await _settings.GetAsync(cancellationToken);
-        if (!settings.Enabled)
-            throw new BookingDisabledException();
 
         var startUtc = SchedulingTime.AsUtc(command.StartUtc);
         var busy = await _busy.ReadAsync(
