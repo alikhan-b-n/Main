@@ -6,6 +6,7 @@ using Lama.Domain.UserManagement.Entities;
 using Lama.Domain.LeadManagement.Entities;
 using Lama.Domain.AccessControl.Entities;
 using Lama.Domain.Scheduling.Entities;
+using Lama.Domain.BotAnalytics;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lama.Infrastructure.Persistence;
@@ -40,6 +41,10 @@ public class ApplicationDbContext : DbContext
     // Scheduling (intro calls booked from the bot, mirrored in Google Calendar)
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<AvailabilitySettings> AvailabilitySettings => Set<AvailabilitySettings>();
+
+    // Bot analytics: how people move through the survey, and the reminder for those who stop
+    public DbSet<SurveyEvent> SurveyEvents => Set<SurveyEvent>();
+    public DbSet<BotReminderSettings> BotReminderSettings => Set<BotReminderSettings>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

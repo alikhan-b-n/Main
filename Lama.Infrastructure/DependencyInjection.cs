@@ -1,3 +1,4 @@
+using Lama.Application.BotAnalytics;
 using Lama.Application.Common;
 using Lama.Application.AccessControl;
 using Lama.Application.LeadManagement;
@@ -40,6 +41,10 @@ public static class DependencyInjection
         services.AddScoped<IAvailabilitySettingsRepository, AvailabilitySettingsRepository>();
         services.Configure<GoogleCalendarOptions>(configuration.GetSection(GoogleCalendarOptions.SectionName));
         services.AddScoped<ISchedulingCalendar, GoogleCalendarClient>();
+
+        // Bot analytics: survey events from the bot and the reminder it sends
+        services.AddScoped<ISurveyEventRepository, SurveyEventRepository>();
+        services.AddScoped<IBotReminderSettingsRepository, BotReminderSettingsRepository>();
 
         // Access control: users, password hashing and the administrator from configuration
         services.AddScoped<IUserRepository, UserRepository>();
