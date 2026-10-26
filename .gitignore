@@ -32,3 +32,6 @@ __pycache__/
 # Sites of other projects on the same server
 deploy/conf.d/*
 !deploy/conf.d/.gitkeep
+
+# Local preview settings with machine-specific paths
+.claude/launch.json
