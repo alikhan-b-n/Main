@@ -1,0 +1,16 @@
+# Copy to /opt/iconicu/Main/deploy/conf.d/nadine.caddy, put the real domain on the first line,
+# then reload the IconicU Caddy. The port matches WEB_PORT in deploy/nadine/.env.
+
+crm-nadine.example.com {
+	encode gzip
+
+	header {
+		X-Frame-Options DENY
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+		X-Robots-Tag "noindex, nofollow"
+		Strict-Transport-Security "max-age=31536000"
+	}
+
+	reverse_proxy host.docker.internal:8081
+}

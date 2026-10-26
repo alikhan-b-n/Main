@@ -1,0 +1,68 @@
+# Noah's Adventures CRM: its own database, API and web, next to IconicU on the same server.
+#
+#   cd /opt/nadine/Main/deploy/nadine && cp .env.example .env && nano .env
+#   docker compose up -d --build
+#
+# No Caddy and no bot here. The IconicU Caddy serves the domain (deploy/conf.d/nadine.caddy)
+# and reaches the web container through the port published below, which is bound to the
+# Docker bridge address only: containers see it, the internet does not.
+#
+# Build contexts default to two repositories side by side on the Nadine_edition branch:
+#   /opt/nadine/Main  /opt/nadine/lama-crm-redesign
+
+name: nadine
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-NadineCRM}
+      POSTGRES_USER: ${POSTGRES_USER:-nadine}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nadine} -d ${POSTGRES_DB:-NadineCRM}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ${API_CONTEXT:-../../../Main}
+      dockerfile: Lama.Api/Dockerfile
+    image: nadine/api:${TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: >-
+        Host=db;Port=5432;Database=${POSTGRES_DB:-NadineCRM};Username=${POSTGRES_USER:-nadine};Password=${POSTGRES_PASSWORD}
+      Database__MigrateOnStartup: "true"
+      Cors__AllowedOrigins__0: ${PUBLIC_URL:?set PUBLIC_URL in .env}
+      Auth__Jwt__Key: ${JWT_KEY:?set JWT_KEY in .env}
+      Auth__Jwt__Issuer: Noah's Adventures CRM
+      Auth__Jwt__Audience: Noah's Adventures CRM
+      Auth__Jwt__ExpiresHours: ${JWT_EXPIRES_HOURS:-72}
+      Auth__Admin__Email: ${ADMIN_EMAIL:?set ADMIN_EMAIL in .env}
+      Auth__Admin__Password: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
+      Auth__Admin__FullName: ${ADMIN_NAME:-Nadine}
+    expose:
+      - "8080"
+
+  web:
+    build:
+      context: ${WEB_CONTEXT:-../../../lama-crm-redesign}
+    image: nadine/web:${TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      # 172.17.0.1 is the docker0 bridge, which Caddy reaches as host.docker.internal
+      - "${BRIDGE_IP:-172.17.0.1}:${WEB_PORT:-8081}:80"
+
+volumes:
+  pgdata:
