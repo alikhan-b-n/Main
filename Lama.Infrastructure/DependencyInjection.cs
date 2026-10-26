@@ -3,6 +3,7 @@ using Lama.Application.Common;
 using Lama.Application.AccessControl;
 using Lama.Application.LeadManagement;
 using Lama.Application.Scheduling;
+using Lama.Application.Stockists;
 using Lama.Infrastructure.Integrations;
 using Lama.Infrastructure.Persistence;
 using Lama.Infrastructure.Repositories;
@@ -35,6 +36,7 @@ public static class DependencyInjection
         // Register repositories as scoped for EF Core
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
         services.AddScoped<ILeadRepository, LeadRepository>();
+        services.AddScoped<IStockistRepository, StockistRepository>();
 
         // Scheduling: intro calls booked from the bot, mirrored in the consultant's Google Calendar
         services.AddScoped<IAppointmentRepository, AppointmentRepository>();

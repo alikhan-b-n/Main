@@ -7,6 +7,7 @@ using Lama.Domain.LeadManagement.Entities;
 using Lama.Domain.AccessControl.Entities;
 using Lama.Domain.Scheduling.Entities;
 using Lama.Domain.BotAnalytics;
+using Lama.Domain.Stockists.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lama.Infrastructure.Persistence;
@@ -45,6 +46,11 @@ public class ApplicationDbContext : DbContext
     // Bot analytics: how people move through the survey, and the reminder for those who stop
     public DbSet<SurveyEvent> SurveyEvents => Set<SurveyEvent>();
     public DbSet<BotReminderSettings> BotReminderSettings => Set<BotReminderSettings>();
+
+    // Stockists: stores that carry the books on consignment, and leads that might
+    public DbSet<Stockist> Stockists => Set<Stockist>();
+    public DbSet<StockistInvoice> StockistInvoices => Set<StockistInvoice>();
+    public DbSet<StockistEvent> StockistEvents => Set<StockistEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

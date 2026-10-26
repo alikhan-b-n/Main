@@ -726,6 +726,153 @@ namespace Lama.Infrastructure.Migrations
                     b.ToTable("AvailabilitySettings", (string)null);
                 });
 
+            modelBuilder.Entity("Lama.Domain.Stockists.Entities.Stockist", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("ContactName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime>("LastActivityAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateOnly?>("LastContactedOn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Region")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Stage")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name");
+
+                    b.HasIndex("Stage");
+
+                    b.ToTable("Stockists", (string)null);
+                });
+
+            modelBuilder.Entity("Lama.Domain.Stockists.Entities.StockistEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("FromStage")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateOnly>("OccurredOn")
+                        .HasColumnType("date");
+
+                    b.Property<int?>("PreviousQuantity")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("StockistId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Text")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("ToStage")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StockistId", "OccurredOn");
+
+                    b.ToTable("StockistEvents", (string)null);
+                });
+
+            modelBuilder.Entity("Lama.Domain.Stockists.Entities.StockistInvoice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateOnly?>("PaidOn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateOnly>("SentOn")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("StockistId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StockistId", "SentOn");
+
+                    b.ToTable("StockistInvoices", (string)null);
+                });
+
             modelBuilder.Entity("Lama.Domain.UserManagement.Entities.Employee", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1057,6 +1204,49 @@ namespace Lama.Infrastructure.Migrations
                     b.Navigation("Windows");
                 });
 
+            modelBuilder.Entity("Lama.Domain.Stockists.Entities.Stockist", b =>
+                {
+                    b.OwnsMany("Lama.Domain.Stockists.Entities.StockLevel", "Stock", b1 =>
+                        {
+                            b1.Property<Guid>("StockistId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Title")
+                                .HasMaxLength(32)
+                                .HasColumnType("character varying(32)");
+
+                            b1.Property<int>("Quantity")
+                                .HasColumnType("integer");
+
+                            b1.HasKey("StockistId", "Title");
+
+                            b1.ToTable("StockistStock", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("StockistId");
+                        });
+
+                    b.Navigation("Stock");
+                });
+
+            modelBuilder.Entity("Lama.Domain.Stockists.Entities.StockistEvent", b =>
+                {
+                    b.HasOne("Lama.Domain.Stockists.Entities.Stockist", null)
+                        .WithMany("Events")
+                        .HasForeignKey("StockistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Lama.Domain.Stockists.Entities.StockistInvoice", b =>
+                {
+                    b.HasOne("Lama.Domain.Stockists.Entities.Stockist", null)
+                        .WithMany("Invoices")
+                        .HasForeignKey("StockistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Lama.Domain.CustomerManagement.Entities.Company", b =>
                 {
                     b.Navigation("Contacts");
@@ -1065,6 +1255,13 @@ namespace Lama.Infrastructure.Migrations
             modelBuilder.Entity("Lama.Domain.LeadManagement.Entities.Lead", b =>
                 {
                     b.Navigation("Events");
+                });
+
+            modelBuilder.Entity("Lama.Domain.Stockists.Entities.Stockist", b =>
+                {
+                    b.Navigation("Events");
+
+                    b.Navigation("Invoices");
                 });
 #pragma warning restore 612, 618
         }
