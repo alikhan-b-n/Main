@@ -50,6 +50,16 @@ public class StockistsController : ControllerBase
     public async Task<ActionResult<StockistSummaryDto>> GetSummary(CancellationToken cancellationToken) =>
         Ok(await _mediator.Send(new GetStockistSummaryQuery(), cancellationToken));
 
+    /// <summary>Invoiced, paid and outstanding for a year (default: this year), by month and by store.</summary>
+    [HttpGet("financials")]
+    public async Task<ActionResult<StockistFinancialsDto>> GetFinancials([FromQuery] int? year,
+        CancellationToken cancellationToken)
+    {
+        if (year is < 2000 or > 2100)
+            return BadRequest(new { message = $"Invalid year: {year}" });
+        return Ok(await _mediator.Send(new GetStockistFinancialsQuery(year), cancellationToken));
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<ActionResult<StockistDetailsDto>> GetStockist(Guid id, CancellationToken cancellationToken)
     {
