@@ -551,6 +551,106 @@ namespace Lama.Infrastructure.Migrations
                     b.ToTable("LeadEvents", (string)null);
                 });
 
+            modelBuilder.Entity("Lama.Domain.OnlineSales.Entities.OnlineOrder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<bool>("Cancelled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateOnly>("PlacedOn")
+                        .HasColumnType("date");
+
+                    b.Property<string>("ShopifyId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlacedOn");
+
+                    b.HasIndex("ShopifyId")
+                        .IsUnique();
+
+                    b.ToTable("OnlineOrders", (string)null);
+                });
+
+            modelBuilder.Entity("Lama.Domain.OnlineSales.Entities.ShopifyConnection", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AccessToken")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<DateTime?>("AccessTokenExpiresAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("ConnectedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("LastSyncError")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("LastSyncedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("RefreshToken")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("Scopes")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("Shop")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTime?>("SyncedUpTo")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ShopifyConnections", (string)null);
+                });
+
             modelBuilder.Entity("Lama.Domain.SalesManagement.Entities.Deal", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1112,6 +1212,42 @@ namespace Lama.Infrastructure.Migrations
                         .HasForeignKey("LeadId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Lama.Domain.OnlineSales.Entities.OnlineOrder", b =>
+                {
+                    b.OwnsMany("Lama.Domain.OnlineSales.Entities.OnlineOrderLine", "Lines", b1 =>
+                        {
+                            b1.Property<Guid>("OnlineOrderId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("Position")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer");
+
+                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Position"));
+
+                            b1.Property<string>("ProductTitle")
+                                .IsRequired()
+                                .HasMaxLength(255)
+                                .HasColumnType("character varying(255)");
+
+                            b1.Property<int>("Quantity")
+                                .HasColumnType("integer");
+
+                            b1.Property<string>("Title")
+                                .HasMaxLength(32)
+                                .HasColumnType("character varying(32)");
+
+                            b1.HasKey("OnlineOrderId", "Position");
+
+                            b1.ToTable("OnlineOrderLines", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("OnlineOrderId");
+                        });
+
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("Lama.Domain.SalesManagement.Entities.Deal", b =>

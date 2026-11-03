@@ -130,6 +130,39 @@ cd /opt/nadine/Main && git pull && cd ../lama-crm-redesign && git pull && cd ../
 
 Миграции API применяет сам при старте.
 
+## 9. Shopify: онлайн-продажи в Financials
+
+Приложение «Noah's Adventures CRM» уже создано в Dev Dashboard (организация Little Lake
+Studio, custom distribution на `04dff3-2.myshopify.com`). Права: `read_orders`,
+`read_all_orders`, `read_products`. App URL — `PUBLIC_URL` + `/api/shopify/install`,
+redirect URL — `PUBLIC_URL` + `/api/shopify/callback`.
+
+1. В Dev Dashboard → приложение → Settings → Credentials скопируйте Client ID и Client
+   secret в `.env` (`SHOPIFY_CLIENT_ID`, `SHOPIFY_CLIENT_SECRET`) и перезапустите API:
+
+   ```bash
+   cd /opt/nadine/Main/deploy/nadine && nano .env && docker compose up -d api
+   ```
+
+2. Установите приложение по ссылке из Partners → приложение → Distribution. Shopify
+   спросит подтверждение прав и вернёт в CRM на `/financials?shopify=connected`.
+   Токен магазина сохраняется в базе (таблица `ShopifyConnections`), в `.env` его нет.
+
+3. Первая синхронизация (вся история заказов) начинается сразу после установки,
+   дальше — раз в час. Как прошла:
+
+   ```bash
+   docker compose logs --tail=50 api | grep -i shopify
+   ```
+
+Синхронизация хранит только номер, дату, сумму и книги заказа, без данных покупателей.
+Сумма — `currentSubtotalPrice`: после скидок и возвратов, без доставки. Отменённые и
+тестовые заказы не считаются. Если в `ShopifyConnections.LastSyncError` текст ошибки —
+следующий запуск повторит то, что не удалось.
+
+Если клиент переустановит приложение, история не теряется: токен заменяется, курсор
+синхронизации остаётся.
+
 ## Эксплуатация
 
 | Задача | Команда (в `/opt/nadine/Main/deploy/nadine`) |

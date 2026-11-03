@@ -33,6 +33,9 @@ public static class DependencyInjection
         // Collects busy time from the calendar and from the calls we booked ourselves
         services.AddScoped<Scheduling.BusyTimeReader>();
 
+        // Copies website orders from Shopify for Financials
+        services.AddScoped<OnlineSales.ShopifyOrderSync>();
+
         return services;
     }
 }

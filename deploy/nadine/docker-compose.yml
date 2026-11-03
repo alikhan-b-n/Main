@@ -50,6 +50,11 @@ services:
       Auth__Admin__Email: ${ADMIN_EMAIL:?set ADMIN_EMAIL in .env}
       Auth__Admin__Password: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
       Auth__Admin__FullName: ${ADMIN_NAME:-Nadine}
+      # Website orders for Financials; empty until the Shopify app exists (DEPLOYMENT-NADINE.md, step 9)
+      Integrations__Shopify__ClientId: ${SHOPIFY_CLIENT_ID:-}
+      Integrations__Shopify__ClientSecret: ${SHOPIFY_CLIENT_SECRET:-}
+      Integrations__Shopify__Shop: ${SHOPIFY_SHOP:-}
+      Integrations__Shopify__PublicUrl: ${PUBLIC_URL}
     expose:
       - "8080"
 

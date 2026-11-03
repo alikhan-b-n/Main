@@ -4,6 +4,7 @@ using Lama.Application.AccessControl;
 using Lama.Application.LeadManagement;
 using Lama.Application.Scheduling;
 using Lama.Application.Stockists;
+using Lama.Application.OnlineSales;
 using Lama.Infrastructure.Integrations;
 using Lama.Infrastructure.Persistence;
 using Lama.Infrastructure.Repositories;
@@ -37,6 +38,14 @@ public static class DependencyInjection
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
         services.AddScoped<ILeadRepository, LeadRepository>();
         services.AddScoped<IStockistRepository, StockistRepository>();
+
+        // Online sales: the Shopify app, and the hourly copy of website orders
+        services.AddScoped<IOnlineSalesRepository, OnlineSalesRepository>();
+        services.Configure<ShopifyOptions>(configuration.GetSection(ShopifyOptions.SectionName));
+        services.AddHttpClient(ShopifyClient.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(60));
+        services.AddScoped<IShopifyClient, ShopifyClient>();
+        services.AddSingleton<ShopifySyncSignal>();
+        services.AddHostedService<ShopifyOrderSyncWorker>();
 
         // Scheduling: intro calls booked from the bot, mirrored in the consultant's Google Calendar
         services.AddScoped<IAppointmentRepository, AppointmentRepository>();

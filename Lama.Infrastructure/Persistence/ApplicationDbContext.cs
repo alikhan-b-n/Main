@@ -8,6 +8,7 @@ using Lama.Domain.AccessControl.Entities;
 using Lama.Domain.Scheduling.Entities;
 using Lama.Domain.BotAnalytics;
 using Lama.Domain.Stockists.Entities;
+using Lama.Domain.OnlineSales.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lama.Infrastructure.Persistence;
@@ -51,6 +52,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<Stockist> Stockists => Set<Stockist>();
     public DbSet<StockistInvoice> StockistInvoices => Set<StockistInvoice>();
     public DbSet<StockistEvent> StockistEvents => Set<StockistEvent>();
+
+    // Online sales: website orders copied from Shopify, and the store's access token
+    public DbSet<ShopifyConnection> ShopifyConnections => Set<ShopifyConnection>();
+    public DbSet<OnlineOrder> OnlineOrders => Set<OnlineOrder>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
