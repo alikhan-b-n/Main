@@ -131,6 +131,21 @@ public class Stockist : AggregateRoot
     }
 
     /// <summary>
+    /// The usual visit: some books sold, so the shelf is topped up. <paramref name="leftOnShelf"/>
+    /// is what the store still had (the difference is what sold), <paramref name="added"/> the
+    /// books brought in. Written as a stock check and a delivery, in one go.
+    /// </summary>
+    public void RecordRestock(string title, int leftOnShelf, int added, DateOnly on, string? note = null)
+    {
+        if (added < 0)
+            throw new ArgumentException("Books added cannot be negative", nameof(added));
+
+        RecordStockCount(title, leftOnShelf, on, note);
+        if (added > 0)
+            RecordDelivery(title, added, on);
+    }
+
+    /// <summary>
     /// Stock carried over from an old record (the Excel sheet) with no date of its own.
     /// It is written to the history but, unlike a stock check, is not a contact.
     /// </summary>
@@ -181,15 +196,32 @@ public class Stockist : AggregateRoot
     }
 
     /// <summary>Undo for a payment ticked by mistake.</summary>
-    public void MarkInvoiceUnpaid(Guid invoiceId)
+    public void MarkInvoiceUnpaid(Guid invoiceId, DateOnly today)
     {
-        FindInvoice(invoiceId).MarkUnpaid();
+        var invoice = FindInvoice(invoiceId);
+        if (!invoice.IsPaid)
+            return;
+
+        invoice.MarkUnpaid();
+        _events.Add(StockistEvent.InvoiceUnpaid(Id, today, invoice.Amount, invoice.Reference));
         Touch();
     }
 
-    public void RemoveInvoice(Guid invoiceId)
+    /// <summary>Fixes the date, amount or reference of an invoice typed in wrong.</summary>
+    public void UpdateInvoice(Guid invoiceId, DateOnly sentOn, decimal? amount, string? reference, DateOnly today)
     {
-        _invoices.Remove(FindInvoice(invoiceId));
+        var invoice = FindInvoice(invoiceId);
+        invoice.Change(sentOn, amount, reference);
+        _events.Add(StockistEvent.InvoiceChanged(Id, today, invoice.Amount, invoice.Reference));
+        Touch();
+    }
+
+    /// <summary>An invoice made in error. The history keeps a line saying it was removed.</summary>
+    public void RemoveInvoice(Guid invoiceId, DateOnly today)
+    {
+        var invoice = FindInvoice(invoiceId);
+        _invoices.Remove(invoice);
+        _events.Add(StockistEvent.InvoiceRemoved(Id, today, invoice.Amount, invoice.Reference));
         Touch();
     }
 

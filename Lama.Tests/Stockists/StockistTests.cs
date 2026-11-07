@@ -97,8 +97,48 @@ public class StockistTests
         store.MarkInvoicePaid(invoice.Id, Today);
         Assert.True(invoice.IsPaid);
 
-        store.MarkInvoiceUnpaid(invoice.Id);
+        store.MarkInvoiceUnpaid(invoice.Id, Today);
         Assert.False(invoice.IsPaid);
+        Assert.Equal(StockistEventKind.InvoiceUnpaid, store.Events.Last().Kind);
+    }
+
+    [Fact]
+    public void Invoice_CanBeCorrectedOrRemovedWithoutBeingPaid()
+    {
+        var store = Store();
+        var invoice = store.AddInvoice(Today.AddDays(-10), 1570m, null);
+
+        store.UpdateInvoice(invoice.Id, Today.AddDays(-9), 157m, "INV-8", Today);
+        Assert.Equal((Today.AddDays(-9), 157m, "INV-8", false), (invoice.SentOn, invoice.Amount, invoice.Reference, invoice.IsPaid));
+
+        store.RemoveInvoice(invoice.Id, Today);
+        Assert.Empty(store.Invoices);
+        Assert.Equal(StockistEventKind.InvoiceRemoved, store.Events.Last().Kind);
+    }
+
+    [Fact]
+    public void Invoice_CannotBeMovedAfterItWasPaid()
+    {
+        var store = Store();
+        var invoice = store.AddInvoice(Today.AddDays(-10), 50m, null);
+        store.MarkInvoicePaid(invoice.Id, Today.AddDays(-5));
+
+        Assert.Throws<ArgumentException>(() => store.UpdateInvoice(invoice.Id, Today, 50m, null, Today));
+    }
+
+    [Fact]
+    public void Restock_RecordsWhatSoldAndWhatWasAdded()
+    {
+        var store = Store();
+        store.RecordDelivery("kerry", 10, Today.AddDays(-30));
+
+        store.RecordRestock("kerry", 3, 7, Today);
+
+        Assert.Equal(10, store.QuantityOf("kerry"));
+        var count = store.Events.Single(e => e.Kind == StockistEventKind.StockCount);
+        Assert.Equal((10, 3), (count.PreviousQuantity, count.Quantity));
+        Assert.Equal(7, store.Events.Last(e => e.Kind == StockistEventKind.Delivery).Quantity);
+        Assert.Equal(Today, store.LastContactedOn);
     }
 
     [Fact]

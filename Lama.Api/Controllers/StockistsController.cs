@@ -99,7 +99,10 @@ public class StockistsController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>movement: Delivery (books dropped off), Return (taken back) or Count (what the store has now).</summary>
+    /// <summary>
+    /// movement: Delivery (books dropped off), Return (taken back), Count (what the store has now)
+    /// or Restock (quantity: left on the shelf, added: brought in).
+    /// </summary>
     [HttpPost("{id:guid}/stock")]
     public async Task<IActionResult> RecordStock(Guid id, [FromBody] RecordStockRequest request,
         CancellationToken cancellationToken)
@@ -108,7 +111,7 @@ public class StockistsController : ControllerBase
             return BadRequest(Invalid<StockMovement>("movement", request.Movement));
 
         await _mediator.Send(new RecordStockCommand(id, movement.Value, request.Title, request.Quantity, request.On,
-            request.Note), cancellationToken);
+            request.Note, request.Added ?? 0), cancellationToken);
         return NoContent();
     }
 
@@ -137,6 +140,16 @@ public class StockistsController : ControllerBase
         CancellationToken cancellationToken)
     {
         await _mediator.Send(new SetStockistInvoicePaidCommand(id, invoiceId, request.Paid, request.PaidOn),
+            cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>Corrects the date, amount or reference; whether it is paid does not change.</summary>
+    [HttpPut("{id:guid}/invoices/{invoiceId:guid}")]
+    public async Task<IActionResult> UpdateInvoice(Guid id, Guid invoiceId, [FromBody] AddInvoiceRequest request,
+        CancellationToken cancellationToken)
+    {
+        await _mediator.Send(new UpdateStockistInvoiceCommand(id, invoiceId, request.SentOn, request.Amount, request.Reference),
             cancellationToken);
         return NoContent();
     }
@@ -204,7 +217,7 @@ public record SaveStockistRequest(
 
 public record ChangeStageRequest(string Stage);
 
-public record RecordStockRequest(string Movement, string Title, int Quantity, DateOnly? On, string? Note);
+public record RecordStockRequest(string Movement, string Title, int Quantity, DateOnly? On, string? Note, int? Added = null);
 
 public record AddStockistNoteRequest(string Text, bool Contact, DateOnly? On);
 

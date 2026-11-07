@@ -22,15 +22,31 @@ public class StockistInvoice : Entity
 
     internal StockistInvoice(Guid stockistId, DateOnly sentOn, decimal? amount, string? reference)
     {
+        StockistId = stockistId;
+        Apply(sentOn, amount, reference);
+    }
+
+    /// <summary>Corrects an invoice typed in wrong. A paid invoice stays paid.</summary>
+    internal void Change(DateOnly sentOn, decimal? amount, string? reference)
+    {
+        if (PaidOn < sentOn)
+            throw new ArgumentException("An invoice cannot be paid before it was sent", nameof(sentOn));
+        Apply(sentOn, amount, reference);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    private void Apply(DateOnly sentOn, decimal? amount, string? reference)
+    {
         if (amount is < 0)
             throw new ArgumentException("Amount cannot be negative", nameof(amount));
 
-        StockistId = stockistId;
+        var cleaned = string.IsNullOrWhiteSpace(reference) ? null : reference.Trim();
+        if (cleaned?.Length > MaxReferenceLength)
+            throw new ArgumentException($"Reference must not exceed {MaxReferenceLength} characters", nameof(reference));
+
         SentOn = sentOn;
         Amount = amount;
-        Reference = string.IsNullOrWhiteSpace(reference) ? null : reference.Trim();
-        if (Reference?.Length > MaxReferenceLength)
-            throw new ArgumentException($"Reference must not exceed {MaxReferenceLength} characters", nameof(reference));
+        Reference = cleaned;
     }
 
     internal void MarkPaid(DateOnly paidOn)

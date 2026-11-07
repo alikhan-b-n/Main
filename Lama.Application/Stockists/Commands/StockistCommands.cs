@@ -43,7 +43,9 @@ public enum StockMovement
     /// <summary>Unsold books taken back.</summary>
     Return,
     /// <summary>"Still 5 in stock": the quantity is what the store has now.</summary>
-    Count
+    Count,
+    /// <summary>A top-up visit: the quantity is what was left on the shelf, Added what was brought in.</summary>
+    Restock
 }
 
 public record RecordStockCommand(
@@ -52,7 +54,8 @@ public record RecordStockCommand(
     string Title,
     int Quantity,
     DateOnly? On = null,
-    string? Note = null) : ICommand;
+    string? Note = null,
+    int Added = 0) : ICommand;
 
 /// <summary>
 /// <paramref name="IsContact"/>: a call, email or visit, which resets the "no contact"
@@ -63,6 +66,9 @@ public record AddStockistNoteCommand(Guid Id, string Text, bool IsContact, DateO
 public record AddStockistInvoiceCommand(Guid Id, DateOnly SentOn, decimal? Amount, string? Reference) : ICommand<Guid>;
 
 public record SetStockistInvoicePaidCommand(Guid Id, Guid InvoiceId, bool Paid, DateOnly? PaidOn = null) : ICommand;
+
+public record UpdateStockistInvoiceCommand(Guid Id, Guid InvoiceId, DateOnly SentOn, decimal? Amount, string? Reference)
+    : ICommand;
 
 public record RemoveStockistInvoiceCommand(Guid Id, Guid InvoiceId) : ICommand;
 
@@ -79,6 +85,7 @@ public class StockistCommandHandlers :
     ICommandHandler<AddStockistNoteCommand>,
     ICommandHandler<AddStockistInvoiceCommand, Guid>,
     ICommandHandler<SetStockistInvoicePaidCommand>,
+    ICommandHandler<UpdateStockistInvoiceCommand>,
     ICommandHandler<RemoveStockistInvoiceCommand>,
     ICommandHandler<DeleteStockistCommand>
 {
@@ -109,6 +116,9 @@ public class StockistCommandHandlers :
                     break;
                 case StockMovement.Return:
                     s.RecordReturn(command.Title, command.Quantity, on, command.Note);
+                    break;
+                case StockMovement.Restock:
+                    s.RecordRestock(command.Title, command.Quantity, command.Added, on, command.Note);
                     break;
                 default:
                     s.RecordStockCount(command.Title, command.Quantity, on, command.Note);
@@ -143,11 +153,15 @@ public class StockistCommandHandlers :
             if (command.Paid)
                 s.MarkInvoicePaid(command.InvoiceId, command.PaidOn ?? Today);
             else
-                s.MarkInvoiceUnpaid(command.InvoiceId);
+                s.MarkInvoiceUnpaid(command.InvoiceId, Today);
         }, cancellationToken);
 
+    public Task Handle(UpdateStockistInvoiceCommand command, CancellationToken cancellationToken) =>
+        Change(command.Id, s => s.UpdateInvoice(command.InvoiceId, command.SentOn, command.Amount, command.Reference, Today),
+            cancellationToken);
+
     public Task Handle(RemoveStockistInvoiceCommand command, CancellationToken cancellationToken) =>
-        Change(command.Id, s => s.RemoveInvoice(command.InvoiceId), cancellationToken);
+        Change(command.Id, s => s.RemoveInvoice(command.InvoiceId, Today), cancellationToken);
 
     public async Task Handle(DeleteStockistCommand command, CancellationToken cancellationToken)
     {

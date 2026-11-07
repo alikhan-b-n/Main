@@ -57,13 +57,15 @@ public class RecordStockCommandValidator : AbstractValidator<RecordStockCommand>
         RuleFor(x => x.Title)
             .Must(t => BookTitles.IsKnown(t?.Trim().ToLowerInvariant()))
             .WithMessage($"Title must be one of: {string.Join(", ", BookTitles.Codes)}");
+        // Count and Restock say what is on the shelf, which can be none
         RuleFor(x => x.Quantity)
-            .GreaterThan(0).When(x => x.Movement != StockMovement.Count)
+            .GreaterThan(0).When(x => x.Movement is StockMovement.Delivery or StockMovement.Return)
             .WithMessage("Quantity must be at least 1");
         RuleFor(x => x.Quantity)
-            .GreaterThanOrEqualTo(0).When(x => x.Movement == StockMovement.Count)
+            .GreaterThanOrEqualTo(0).When(x => x.Movement is StockMovement.Count or StockMovement.Restock)
             .WithMessage("Quantity cannot be negative");
         RuleFor(x => x.Quantity).LessThanOrEqualTo(10_000);
+        RuleFor(x => x.Added).InclusiveBetween(0, 10_000);
         RuleFor(x => x.Note).MaximumLength(StockistEvent.MaxTextLength);
     }
 }
@@ -81,6 +83,15 @@ public class AddStockistNoteCommandValidator : AbstractValidator<AddStockistNote
 public class AddStockistInvoiceCommandValidator : AbstractValidator<AddStockistInvoiceCommand>
 {
     public AddStockistInvoiceCommandValidator()
+    {
+        RuleFor(x => x.Amount).GreaterThanOrEqualTo(0).When(x => x.Amount.HasValue);
+        RuleFor(x => x.Reference).MaximumLength(StockistInvoice.MaxReferenceLength);
+    }
+}
+
+public class UpdateStockistInvoiceCommandValidator : AbstractValidator<UpdateStockistInvoiceCommand>
+{
+    public UpdateStockistInvoiceCommandValidator()
     {
         RuleFor(x => x.Amount).GreaterThanOrEqualTo(0).When(x => x.Amount.HasValue);
         RuleFor(x => x.Reference).MaximumLength(StockistInvoice.MaxReferenceLength);

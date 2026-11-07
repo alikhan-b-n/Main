@@ -61,6 +61,15 @@ public class StockistEvent : Entity
 
     internal static StockistEvent InvoicePaid(Guid stockistId, DateOnly on, decimal? amount, string? reference) =>
         new(stockistId, StockistEventKind.InvoicePaid, on) { Amount = amount, Text = reference };
+
+    internal static StockistEvent InvoiceUnpaid(Guid stockistId, DateOnly on, decimal? amount, string? reference) =>
+        new(stockistId, StockistEventKind.InvoiceUnpaid, on) { Amount = amount, Text = reference };
+
+    internal static StockistEvent InvoiceChanged(Guid stockistId, DateOnly on, decimal? amount, string? reference) =>
+        new(stockistId, StockistEventKind.InvoiceChanged, on) { Amount = amount, Text = reference };
+
+    internal static StockistEvent InvoiceRemoved(Guid stockistId, DateOnly on, decimal? amount, string? reference) =>
+        new(stockistId, StockistEventKind.InvoiceRemoved, on) { Amount = amount, Text = reference };
 }
 
 public enum StockistEventKind
@@ -73,5 +82,9 @@ public enum StockistEventKind
     Note,
     StageChanged,
     InvoiceSent,
-    InvoicePaid
+    InvoicePaid,
+    // Corrections, so the history explains why an earlier "sent" or "paid" no longer shows
+    InvoiceUnpaid,
+    InvoiceChanged,
+    InvoiceRemoved
 }
