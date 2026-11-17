@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using Lama.Domain.AccessControl.Entities;
 using Lama.Api.Leads;
 using Lama.Application.LeadManagement;
 using Lama.Application.LeadManagement.Commands;
@@ -85,6 +87,16 @@ public class LeadsController : ControllerBase
         return CreatedAtAction(nameof(GetLead), new { id }, lead);
     }
 
+    /// <summary>
+    /// Old applications in bulk, dated when they were made. Rows whose phone or email is
+    /// already in the CRM are skipped and listed. With dryRun=true nothing is written.
+    /// </summary>
+    [HttpPost("import")]
+    [Authorize(Roles = nameof(UserRole.Admin))]
+    public async Task<ActionResult<ImportLeadsResult>> Import(
+        [FromBody] ImportLeadsRequest request, [FromQuery] bool dryRun = false, CancellationToken cancellationToken = default) =>
+        Ok(await _mediator.Send(new ImportLeadsCommand(request.Rows ?? Array.Empty<ImportLeadRow>(), dryRun), cancellationToken));
+
     [HttpPatch("{id:guid}/status")]
     public async Task<IActionResult> ChangeStatus(Guid id, [FromBody] ChangeLeadStatusRequest request, CancellationToken cancellationToken)
     {
@@ -130,6 +142,8 @@ public record CreateLeadRequest(
     string? Source,
     string? Temperature,
     string? Comment);
+
+public record ImportLeadsRequest(IReadOnlyList<ImportLeadRow>? Rows);
 
 public record ChangeLeadStatusRequest(string Status, string? LostReason);
 

@@ -33,6 +33,13 @@ public class LeadEvent : Entity
 
     internal static LeadEvent Note(Guid leadId, string text) =>
         new(leadId, LeadEventKind.Note) { Text = text };
+
+    /// <summary>Back-dates the entry, for history carried over from an older record.</summary>
+    internal LeadEvent At(DateTime occurredAtUtc)
+    {
+        CreatedAt = DateTime.SpecifyKind(occurredAtUtc, DateTimeKind.Utc);
+        return this;
+    }
 }
 
 public enum LeadEventKind

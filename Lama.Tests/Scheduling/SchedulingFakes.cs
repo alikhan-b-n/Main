@@ -139,6 +139,10 @@ public sealed class FakeLeadRepository : ILeadRepository
     public Task<IReadOnlyList<LeadStatsRow>> GetStatsRowsAsync(CancellationToken cancellationToken = default) =>
         throw new NotSupportedException();
 
+    public Task<IReadOnlyList<LeadContact>> GetContactsAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<LeadContact>>(Leads
+            .Select(l => new LeadContact(l.Id, l.FullName, l.Phone, l.Email.Value)).ToList());
+
     public Task AddAsync(Lead lead, CancellationToken cancellationToken = default)
     {
         Leads.Add(lead);

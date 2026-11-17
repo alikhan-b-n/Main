@@ -37,6 +37,12 @@ public class LeadRepository : ILeadRepository
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<LeadContact>> GetContactsAsync(CancellationToken cancellationToken = default) =>
+        await _context.Leads
+            .AsNoTracking()
+            .Select(l => new LeadContact(l.Id, l.FullName, l.Phone, l.Email.Value))
+            .ToListAsync(cancellationToken);
+
     public async Task<PagedResult<Lead>> SearchAsync(LeadFilter filter, CancellationToken cancellationToken = default)
     {
         var query = _context.Leads.AsNoTracking();

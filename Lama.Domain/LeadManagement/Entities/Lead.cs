@@ -80,6 +80,39 @@ public class Lead : AggregateRoot
         return lead;
     }
 
+    /// <summary>
+    /// A lead carried over from an older record, such as the website form's answer sheet.
+    /// Everything is dated when the person actually applied, not when the import ran, so
+    /// old applications neither jump to the top of the list nor count as new this week.
+    /// </summary>
+    public static Lead Import(LeadSubmission submission, LeadStatus status, IEnumerable<string> notes)
+    {
+        var at = DateTime.SpecifyKind(submission.SubmittedAt, DateTimeKind.Utc);
+        var lead = new Lead { Status = LeadStatus.New, CreatedAt = at };
+        lead.ApplySubmission(submission);
+        lead._events.Add(LeadEvent.Created(lead.Id).At(at));
+
+        if (status != LeadStatus.New)
+        {
+            if (status == LeadStatus.Lost)
+                throw new ArgumentException("An imported lead cannot start as lost: there is no reason to record", nameof(status));
+            lead.Status = status;
+            lead._events.Add(LeadEvent.StatusChanged(lead.Id, LeadStatus.New, status, null).At(at));
+        }
+
+        foreach (var note in notes.Where(n => !string.IsNullOrWhiteSpace(n)))
+        {
+            var text = note.Trim();
+            lead._events.Add(LeadEvent.Note(lead.Id, text.Length <= LeadEvent.MaxTextLength
+                ? text
+                : text[..LeadEvent.MaxTextLength]).At(at));
+        }
+
+        lead.LastActivityAt = at;
+        lead.UpdatedAt = null;
+        return lead;
+    }
+
     /// <summary>The same person filled in the survey again: refresh their answers.</summary>
     public void Resubmit(LeadSubmission submission)
     {

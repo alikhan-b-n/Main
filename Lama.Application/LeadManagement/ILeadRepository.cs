@@ -22,6 +22,9 @@ public interface ILeadRepository
 
     Task AddAsync(Lead lead, CancellationToken cancellationToken = default);
 
+    /// <summary>Name, phone and email of every lead — what an import checks for duplicates.</summary>
+    Task<IReadOnlyList<LeadContact>> GetContactsAsync(CancellationToken cancellationToken = default);
+
     /// <summary>Persists changes made to leads loaded through this repository.</summary>
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
 
@@ -40,6 +43,8 @@ public record LeadFilter(
     int Page = 1,
     int PageSize = 25
 );
+
+public record LeadContact(Guid Id, string FullName, string? Phone, string Email);
 
 public record PagedResult<T>(IReadOnlyList<T> Items, int Page, int PageSize, int TotalCount);
 
