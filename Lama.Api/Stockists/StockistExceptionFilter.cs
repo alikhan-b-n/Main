@@ -1,4 +1,5 @@
 using FluentValidation;
+using Lama.Application.Expenses;
 using Lama.Application.Stockists;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -23,8 +24,8 @@ public class StockistExceptionFilter : IExceptionFilter
                 context.ExceptionHandled = true;
                 break;
 
-            case StockistNotFoundException notFound:
-                context.Result = new NotFoundObjectResult(new { message = notFound.Message });
+            case StockistNotFoundException or ExpenseNotFoundException:
+                context.Result = new NotFoundObjectResult(new { message = context.Exception.Message });
                 context.ExceptionHandled = true;
                 break;
 

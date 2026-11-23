@@ -146,6 +146,19 @@ public class Stockist : AggregateRoot
     }
 
     /// <summary>
+    /// The postage paid to send books here, written to the history. The money itself is
+    /// kept as an expense, which is what the totals count.
+    /// </summary>
+    public void RecordShipping(decimal amount, DateOnly on)
+    {
+        if (amount <= 0)
+            throw new ArgumentException("Shipping cost must be more than zero", nameof(amount));
+
+        _events.Add(StockistEvent.ShippingPaid(Id, on, decimal.Round(amount, 2)));
+        Touch();
+    }
+
+    /// <summary>
     /// Stock carried over from an old record (the Excel sheet) with no date of its own.
     /// It is written to the history but, unlike a stock check, is not a contact.
     /// </summary>

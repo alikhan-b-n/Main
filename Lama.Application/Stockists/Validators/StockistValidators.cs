@@ -66,6 +66,13 @@ public class RecordStockCommandValidator : AbstractValidator<RecordStockCommand>
             .WithMessage("Quantity cannot be negative");
         RuleFor(x => x.Quantity).LessThanOrEqualTo(10_000);
         RuleFor(x => x.Added).InclusiveBetween(0, 10_000);
+        // Shipping is paid when books go out: a delivery, or a restock that brings some in
+        RuleFor(x => x.ShippingCost)
+            .Must((x, cost) => cost is null or 0 || x.Movement == StockMovement.Delivery
+                || (x.Movement == StockMovement.Restock && x.Added > 0))
+            .WithMessage("Shipping can only be added when books are sent to the store");
+        RuleFor(x => x.ShippingCost).InclusiveBetween(0, 10_000).When(x => x.ShippingCost != null)
+            .WithMessage("Shipping cost must be between 0 and 10,000");
         RuleFor(x => x.Note).MaximumLength(StockistEvent.MaxTextLength);
     }
 }

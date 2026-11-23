@@ -8,6 +8,7 @@ using Lama.Domain.AccessControl.Entities;
 using Lama.Domain.Scheduling.Entities;
 using Lama.Domain.BotAnalytics;
 using Lama.Domain.Stockists.Entities;
+using Lama.Domain.Expenses.Entities;
 using Lama.Domain.OnlineSales.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -56,6 +57,9 @@ public class ApplicationDbContext : DbContext
     // Online sales: website orders copied from Shopify, and the store's access token
     public DbSet<ShopifyConnection> ShopifyConnections => Set<ShopifyConnection>();
     public DbSet<OnlineOrder> OnlineOrders => Set<OnlineOrder>();
+
+    // Expenses set against the sales: shipping to stores, Shopify, the CRM
+    public DbSet<Expense> Expenses => Set<Expense>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

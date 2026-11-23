@@ -1,5 +1,7 @@
 using Lama.Application.Common;
+using Lama.Application.Expenses;
 using Lama.Application.Stockists.Queries;
+using Lama.Domain.Expenses.Entities;
 using Lama.Domain.Stockists.Entities;
 
 namespace Lama.Application.Stockists.Commands;
@@ -55,7 +57,8 @@ public record RecordStockCommand(
     int Quantity,
     DateOnly? On = null,
     string? Note = null,
-    int Added = 0) : ICommand;
+    int Added = 0,
+    decimal? ShippingCost = null) : ICommand;
 
 /// <summary>
 /// <paramref name="IsContact"/>: a call, email or visit, which resets the "no contact"
@@ -90,11 +93,13 @@ public class StockistCommandHandlers :
     ICommandHandler<DeleteStockistCommand>
 {
     private readonly IStockistRepository _stockists;
+    private readonly IExpenseRepository _expenses;
     private readonly TimeProvider _clock;
 
-    public StockistCommandHandlers(IStockistRepository stockists, TimeProvider clock)
+    public StockistCommandHandlers(IStockistRepository stockists, IExpenseRepository expenses, TimeProvider clock)
     {
         _stockists = stockists;
+        _expenses = expenses;
         _clock = clock;
     }
 
@@ -123,6 +128,15 @@ public class StockistCommandHandlers :
                 default:
                     s.RecordStockCount(command.Title, command.Quantity, on, command.Note);
                     break;
+            }
+
+            // Postage for books sent out: a line in the store's history, and an expense for the totals.
+            // Both are saved together, in the same unit of work as the stock change.
+            if (command.ShippingCost is > 0 and var cost)
+            {
+                s.RecordShipping(cost, on);
+                _expenses.Add(Expense.Create(ExpenseCategory.Shipping, cost, on, monthly: false, note: null,
+                    stockistId: s.Id));
             }
         }, cancellationToken);
     }

@@ -363,6 +363,51 @@ namespace Lama.Infrastructure.Migrations
                     b.ToTable("Tickets", (string)null);
                 });
 
+            modelBuilder.Entity("Lama.Domain.Expenses.Entities.Expense", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateOnly?>("EndsOn")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("Monthly")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateOnly>("StartsOn")
+                        .HasColumnType("date");
+
+                    b.Property<Guid?>("StockistId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StartsOn");
+
+                    b.HasIndex("StockistId");
+
+                    b.ToTable("Expenses", (string)null);
+                });
+
             modelBuilder.Entity("Lama.Domain.LeadManagement.Entities.Lead", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1176,6 +1221,14 @@ namespace Lama.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("PhoneNumber");
+                });
+
+            modelBuilder.Entity("Lama.Domain.Expenses.Entities.Expense", b =>
+                {
+                    b.HasOne("Lama.Domain.Stockists.Entities.Stockist", null)
+                        .WithMany()
+                        .HasForeignKey("StockistId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("Lama.Domain.LeadManagement.Entities.Lead", b =>

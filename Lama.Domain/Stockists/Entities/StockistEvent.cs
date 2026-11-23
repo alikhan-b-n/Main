@@ -70,6 +70,9 @@ public class StockistEvent : Entity
 
     internal static StockistEvent InvoiceRemoved(Guid stockistId, DateOnly on, decimal? amount, string? reference) =>
         new(stockistId, StockistEventKind.InvoiceRemoved, on) { Amount = amount, Text = reference };
+
+    internal static StockistEvent ShippingPaid(Guid stockistId, DateOnly on, decimal amount) =>
+        new(stockistId, StockistEventKind.Shipping, on) { Amount = amount };
 }
 
 public enum StockistEventKind
@@ -86,5 +89,7 @@ public enum StockistEventKind
     // Corrections, so the history explains why an earlier "sent" or "paid" no longer shows
     InvoiceUnpaid,
     InvoiceChanged,
-    InvoiceRemoved
+    InvoiceRemoved,
+    // What it cost to send books to the store; the cost itself is an expense
+    Shipping
 }

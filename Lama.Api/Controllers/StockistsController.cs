@@ -111,7 +111,7 @@ public class StockistsController : ControllerBase
             return BadRequest(Invalid<StockMovement>("movement", request.Movement));
 
         await _mediator.Send(new RecordStockCommand(id, movement.Value, request.Title, request.Quantity, request.On,
-            request.Note, request.Added ?? 0), cancellationToken);
+            request.Note, request.Added ?? 0, request.ShippingCost), cancellationToken);
         return NoContent();
     }
 
@@ -217,7 +217,9 @@ public record SaveStockistRequest(
 
 public record ChangeStageRequest(string Stage);
 
-public record RecordStockRequest(string Movement, string Title, int Quantity, DateOnly? On, string? Note, int? Added = null);
+/// <summary>shippingCost: postage paid to send the books, for a delivery or a restock that adds some.</summary>
+public record RecordStockRequest(
+    string Movement, string Title, int Quantity, DateOnly? On, string? Note, int? Added = null, decimal? ShippingCost = null);
 
 public record AddStockistNoteRequest(string Text, bool Contact, DateOnly? On);
 

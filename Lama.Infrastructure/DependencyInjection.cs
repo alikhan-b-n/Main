@@ -4,6 +4,7 @@ using Lama.Application.AccessControl;
 using Lama.Application.LeadManagement;
 using Lama.Application.Scheduling;
 using Lama.Application.Stockists;
+using Lama.Application.Expenses;
 using Lama.Application.OnlineSales;
 using Lama.Infrastructure.Integrations;
 using Lama.Infrastructure.Persistence;
@@ -41,6 +42,7 @@ public static class DependencyInjection
 
         // Online sales: the Shopify app, and the hourly copy of website orders
         services.AddScoped<IOnlineSalesRepository, OnlineSalesRepository>();
+        services.AddScoped<IExpenseRepository, ExpenseRepository>();
         services.Configure<ShopifyOptions>(configuration.GetSection(ShopifyOptions.SectionName));
         services.AddHttpClient(ShopifyClient.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(60));
         services.AddScoped<IShopifyClient, ShopifyClient>();
