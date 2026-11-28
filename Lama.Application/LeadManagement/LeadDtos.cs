@@ -1,3 +1,4 @@
+using Lama.Domain.LeadManagement;
 using Lama.Domain.LeadManagement.Entities;
 
 namespace Lama.Application.LeadManagement;
@@ -7,6 +8,7 @@ public record LeadListItemDto(
     string FullName,
     string Email,
     string? Phone,
+    string? PhoneCountry,
     string? TelegramUsername,
     string Source,
     string? TargetDegree,
@@ -28,6 +30,7 @@ public record LeadDetailsDto(
     string FullName,
     string Email,
     string? Phone,
+    string? PhoneCountry,
     string? TelegramUsername,
     long? TelegramId,
     string Source,
@@ -79,6 +82,7 @@ internal static class LeadMapping
         lead.FullName,
         lead.Email.Value,
         lead.Phone,
+        PhoneCountry.FromPhone(lead.Phone),
         lead.TelegramUsername,
         lead.Source,
         lead.TargetDegree,
@@ -100,6 +104,7 @@ internal static class LeadMapping
         lead.FullName,
         lead.Email.Value,
         lead.Phone,
+        PhoneCountry.FromPhone(lead.Phone),
         lead.TelegramUsername,
         lead.TelegramId,
         lead.Source,

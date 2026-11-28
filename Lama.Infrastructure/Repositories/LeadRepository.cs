@@ -1,4 +1,5 @@
 using Lama.Application.LeadManagement;
+using Lama.Domain.LeadManagement;
 using Lama.Domain.LeadManagement.Entities;
 using Lama.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -72,6 +73,21 @@ public class LeadRepository : ILeadRepository
                 (l.TelegramUsername != null && EF.Functions.ILike(l.TelegramUsername, pattern)));
         }
 
+        if (!string.IsNullOrWhiteSpace(filter.PhoneCountry))
+        {
+            // The phone country is computed, not stored, so it cannot be filtered in SQL:
+            // match the remaining candidates' phones in memory and narrow down by id.
+            var wanted = filter.PhoneCountry.Trim();
+            var candidates = await query
+                .Select(l => new { l.Id, l.Phone })
+                .ToListAsync(cancellationToken);
+            var ids = candidates
+                .Where(c => string.Equals(PhoneCountry.KeyFromPhone(c.Phone), wanted, StringComparison.OrdinalIgnoreCase))
+                .Select(c => c.Id)
+                .ToList();
+            query = query.Where(l => ids.Contains(l.Id));
+        }
+
         var total = await query.CountAsync(cancellationToken);
         var items = await query
             .OrderByDescending(l => l.CreatedAt)
@@ -92,7 +108,8 @@ public class LeadRepository : ILeadRepository
                 l.AnnualBudget,
                 l.TargetDegree,
                 l.TargetCountries,
-                l.CreatedAt))
+                l.CreatedAt,
+                l.Phone))
             .ToListAsync(cancellationToken);
 
     public async Task AddAsync(Lead lead, CancellationToken cancellationToken = default)

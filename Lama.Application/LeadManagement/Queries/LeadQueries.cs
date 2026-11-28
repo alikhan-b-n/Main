@@ -1,4 +1,5 @@
 using Lama.Application.Common;
+using Lama.Domain.LeadManagement;
 using Lama.Domain.LeadManagement.Entities;
 
 namespace Lama.Application.LeadManagement.Queries;
@@ -67,7 +68,8 @@ public record LeadStatsDto(
     IReadOnlyList<CountItem> BySource,
     IReadOnlyList<CountItem> ByBudget,
     IReadOnlyList<CountItem> ByDegree,
-    IReadOnlyList<CountItem> ByCountry
+    IReadOnlyList<CountItem> ByCountry,
+    IReadOnlyList<CountItem> ByPhoneCountry
 );
 
 public record CountItem(string Key, int Count);
@@ -125,7 +127,9 @@ public static class LeadStatsCalculator
             BySource: CountBy(rows.Select(r => r.Source)),
             ByBudget: CountBy(rows.Select(r => r.AnnualBudget)),
             ByDegree: CountBy(rows.Select(r => r.TargetDegree)),
-            ByCountry: CountBy(rows.SelectMany(r => r.TargetCountries))
+            ByCountry: CountBy(rows.SelectMany(r => r.TargetCountries)),
+            // Where the lead is from, by phone; leads without a usable phone count as "unknown".
+            ByPhoneCountry: CountBy(rows.Select(r => PhoneCountry.KeyFromPhone(r.Phone)))
         );
     }
 

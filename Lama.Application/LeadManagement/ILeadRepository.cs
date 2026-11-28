@@ -31,12 +31,15 @@ public interface ILeadRepository
     Task DeleteAsync(Lead lead, CancellationToken cancellationToken = default);
 }
 
+/// <param name="Country">A target country the lead wants to study in.</param>
+/// <param name="PhoneCountry">The country worked out from the phone (ISO code, or "unknown").</param>
 public record LeadFilter(
     LeadStatus? Status = null,
     LeadTemperature? Temperature = null,
     string? Source = null,
     string? TargetDegree = null,
     string? Country = null,
+    string? PhoneCountry = null,
     string? Search = null,
     DateTime? CreatedFrom = null,
     DateTime? CreatedTo = null,
@@ -56,7 +59,8 @@ public record LeadStatsRow(
     string? AnnualBudget,
     string? TargetDegree,
     IReadOnlyList<string> TargetCountries,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    string? Phone = null
 );
 
 public class LeadNotFoundException : Exception
